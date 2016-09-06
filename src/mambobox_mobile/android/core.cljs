@@ -2,7 +2,9 @@
   (:require [reagent.core :as r :refer [atom]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [mambobox-mobile.events]
-            [mambobox-mobile.subs]))
+            [mambobox-mobile.subs]
+            [clojure.spec :as s]
+            [mambobox-core.core-spec]))
 
 (def ReactNative (js/require "react-native"))
 
