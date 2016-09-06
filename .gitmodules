@@ -1,0 +1,3 @@
+[submodule "mambobox-core"]
+	path = mambobox-core
+	url = git@github.com:jpmonettas/mambobox-core.git
