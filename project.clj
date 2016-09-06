@@ -3,8 +3,8 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.9.0-alpha10"]
-                 [org.clojure/clojurescript "1.9.198"]
+  :dependencies [[org.clojure/clojure "1.9.0-alpha11"]
+                 [org.clojure/clojurescript "1.9.227"]
                  [reagent "0.6.0-rc" :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server]]
                  [re-frame "0.8.0"]]
   :plugins [[lein-cljsbuild "1.1.1"]
@@ -15,7 +15,8 @@
              ["with-profile" "prod" "cljsbuild" "once" "ios"]
              ["with-profile" "prod" "cljsbuild" "once" "android"]]}
   :profiles {:dev {:dependencies [[figwheel-sidecar "0.5.0-6"]
-                                  [com.cemerick/piggieback "0.2.1"]]
+                                  [com.cemerick/piggieback "0.2.1"]
+                                  [binaryage/devtools "0.8.1"]]
                    :source-paths ["src" "mambobox-core/src/cljc" "env/dev"]
                    :cljsbuild    {:builds {:ios     {:source-paths ["src" "mambobox-core/src/cljc" "env/dev"]
                                                      :figwheel     true
@@ -28,7 +29,12 @@
                                                      :compiler     {:output-to     "target/android/not-used.js"
                                                                     :main          "env.android.main"
                                                                     :output-dir    "target/android"
-                                                                    :optimizations :none}}}}
+                                                                    :optimizations :none
+                                                                    :preloads [devtools.preload]
+                                                                    :source-map     true
+                                                                    :external-config {:devtools/config {:features-to-install    [:formatters]
+                                                                                                        :bypass-availability-checks true}}}}}}
+                                                     
                    :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}
              :prod {:cljsbuild {:builds {:ios     {:source-paths ["src" "mambobox-core/src/cljc" "env/prod"]
                                                    :compiler     {:output-to     "index.ios.js"

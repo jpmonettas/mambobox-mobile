@@ -1,5 +1,6 @@
 (ns mambobox-mobile.db
-  (:require [clojure.spec :as s]))
+  (:require [clojure.spec :as s]
+            [devtools.core :as devt]))
 
 ;; spec of app-db
 (s/def ::greeting string?)

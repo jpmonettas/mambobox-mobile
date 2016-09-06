@@ -24,19 +24,19 @@
 
 (reg-event-db
   :initialize-db
-  validate-spec-mw
+  [validate-spec-mw debug]
   (fn [_ _]
     app-db))
 
 (reg-event-db
   :set-greeting
-  validate-spec-mw
+  [validate-spec-mw debug]
   (fn [db [_ value]]
     (assoc db :greeting value)))
 
 (reg-event-db
  :inc-counter
- validate-spec-mw
+ [validate-spec-mw debug]
  (fn [db [_ value]]
    (update db :counter inc)))
 
