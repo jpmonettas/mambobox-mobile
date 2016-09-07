@@ -8,7 +8,9 @@
     "prod": "env/prod"
   },
   "modules": [
-    "react-native-video/Video"
+    "react-native-video/Video",
+    "react-native-scrollable-tab-view",
+    "react-native-vector-icons/FontAwesome"
   ],
   "imageDirs": [
     "images"

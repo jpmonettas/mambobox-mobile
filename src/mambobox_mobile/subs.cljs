@@ -2,9 +2,9 @@
   (:require [re-frame.core :refer [reg-sub]]))
 
 (reg-sub
-  :get-greeting
+  :favorites-songs
   (fn [db _]
-    (str (:greeting db) " " (:counter db))))
+    (:favorites-songs db)))
 
 (reg-sub
  :player-status
