@@ -28,21 +28,16 @@
   (fn [_ _]
     app-db))
 
-(reg-event-db
-  :set-greeting
-  [validate-spec-mw debug]
-  (fn [db [_ value]]
-    (assoc db :greeting value)))
-
-(reg-event-db
- :inc-counter
- [validate-spec-mw debug]
- (fn [db [_ value]]
-   (update db :counter inc)))
 
 (reg-event-db
  :toggle-play
  [validate-spec-mw debug]
  (fn [db [_ value]]
    (update db :playing not)))
+
+(reg-event-db
+ :change-tab
+ [validate-spec-mw debug]
+ (fn [db [_ tab-idx]]
+   (assoc-in db [:ui :selected-tab] tab-idx)))
 

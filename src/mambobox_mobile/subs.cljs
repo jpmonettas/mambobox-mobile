@@ -7,6 +7,21 @@
     (:favorites-songs db)))
 
 (reg-sub
+ :hot-songs
+  (fn [db _]
+    (:hot-songs db)))
+
+(reg-sub
  :player-status
   (fn [db _]
-    (select-keys db [:playing])))
+    (:player-status db)))
+
+;;;;;;;;;;;;;
+;; UI subs ;;
+;;;;;;;;;;;;;
+
+(reg-sub
+ :selected-tab
+  (fn [db _]
+    (-> db :ui :selected-tab)))
+

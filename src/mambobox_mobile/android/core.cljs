@@ -11,6 +11,7 @@
 (def app-registry (.-AppRegistry ReactNative))
 (def text (r/adapt-react-class (.-Text ReactNative)))
 (def view (r/adapt-react-class (.-View ReactNative)))
+(def scroll-view (r/adapt-react-class (.-ScrollView ReactNative)))
 (def list-view (r/adapt-react-class (.-ListView ReactNative)))
 (def DataSource (-> ReactNative .-ListView .-DataSource))
 (def view-pager (r/adapt-react-class (.-ViewPagerAndroid ReactNative))) 
@@ -69,27 +70,67 @@
                   :margin 5}
           :size 20}]])
 
-(defn my-favorites []
+(defn my-favorites-tab []
   (let [favorites-songs (subscribe [:favorites-songs])]
    (fn []
      [list-view {:dataSource (build-list-view-datasource (apply array @favorites-songs))
                  :renderRow (comp r/as-element song)}])))
 
-(defn hot []
-  [view {}
-   [text {} "Hot"]])
+(defn hot-tab []
+  (let [hot-songs (subscribe [:hot-songs])]
+   (fn []
+     [list-view {:dataSource (build-list-view-datasource (apply array @hot-songs))
+                 :renderRow (comp r/as-element song)}])))
 
-(defn categories []
-  [view {}
-   [text {} "categories"]])
+(def tags [["chacha" "#ff0000"]
+           ["mambo" "#9303a7"]
+           ["latin-jazz" "#993366"]
+           ["guaracha" "#64a8d1"]
+           ["salsa dura" "#2219b2"]
+           ["romantica" "#cb0077"]
+           ["bolero" "#e5399e"]
+           ["pachanga" "#999900"]
+           ["boogaloo" "#d9534f"]
+           ["son" "#ff7800"]
+           ["montuno" "#ff9a40"]
+           ["songo" "#ffa700"]
+           ["danzon" "#ffbd40"]
+           ["rumba" "#138900"]
+           ["guaguanco" "#389e28"]
+           ["yambu" "#1dd300"]
+           ["columbia" "#52e93a"]
+           ["afro" "#a64b00"]])
+
+(defn tags-line [[t1-text t1-bg t1-fg]
+                 [t2-text t2-bg t2-fg]]
+  (let [tag-style {:padding 20
+                   :text-align "center"
+                   :margin 10
+                   :flex 0.5
+                   :font-weight :bold
+                   :font-size 15
+                   :color "white"}]
+   [view {:flex-direction :row}
+    [text {:style (merge tag-style {:background-color t1-bg})} t1-text]
+    [text {:style (merge tag-style {:background-color t2-bg})} t2-text]]))
+
+(defn tags-tab []
+  [scroll-view 
+   (for [[t1 t2] (partition-all 2 tags)]
+     ^{:key (first t1)} [tags-line t1 t2])])
 
 (defn app-root []
-  [scrollable-tab-view 
-   [view {:tab-label "Favorites"
-          :style {:flex 1}}
-    [my-favorites]]
-   [view {:tab-label "Hot"} [hot]]
-   [view {:tab-label "Categories"} [categories]]])
+  (let [selected-tab (subscribe [:selected-tab])]
+   (fn []
+     [scrollable-tab-view {:initial-page @selected-tab
+                           :on-change-tab #(dispatch [:change-tab (.-i %)])}
+      [view {:tab-label "Favorites"
+             :style {:flex 1}}
+       [my-favorites-tab]]
+      [view {:tab-label "Hot"
+             :style {:flex 1}} [hot-tab]]
+      [view {:tab-label "Explore"
+             :style {:flex 1}} [tags-tab]]])))
 
 #_(defn pager []
   [view-pager {:init-page 0 :style {:height 300}} 

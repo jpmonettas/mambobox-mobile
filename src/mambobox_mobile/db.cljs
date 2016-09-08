@@ -3,16 +3,16 @@
             [devtools.core :as devt]))
 
 ;; spec of app-db
-(s/def ::greeting string?)
-(s/def ::counter integer?)
-(s/def ::playing boolean?)
-(s/def ::app-db
-  (s/keys :req-un [::greeting ::counter ::playing]))
+
+(s/def ::app-db any?)
 
 ;; initial state of app-db
-(def app-db {:greeting "Hello Clojure in iOS and Android!"
-             :counter 0
-             :playing false
+(def app-db {:player-status {:paused true
+                             :playing-song nil}
+             :ui {:selected-tab 1}
+             :hot-songs [{:song-name "Guguanco del gran combo" :artist-name "El gran combo de puerto rico" :duration 410}
+                               {:song-name "Por tu amor" :artist-name "Latin Vibe" :duration 411}
+                               {:song-name "La llave" :artist-name "Latin Vibe" :duration 412}]
              :favorites-songs [{:song-name "Guguanco del gran combo" :artist-name "El gran combo de puerto rico" :duration 410}
                                {:song-name "Por tu amor" :artist-name "Latin Vibe" :duration 411}
                                {:song-name "La llave" :artist-name "Latin Vibe" :duration 412}
