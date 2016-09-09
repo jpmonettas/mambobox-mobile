@@ -13,6 +13,8 @@
 (def view (r/adapt-react-class (.-View ReactNative)))
 (def scroll-view (r/adapt-react-class (.-ScrollView ReactNative)))
 (def list-view (r/adapt-react-class (.-ListView ReactNative)))
+(def tool-bar (r/adapt-react-class (.-ToolbarAndroid ReactNative)))
+(def text-input (r/adapt-react-class (.-TextInput ReactNative)))
 (def DataSource (-> ReactNative .-ListView .-DataSource))
 (def view-pager (r/adapt-react-class (.-ViewPagerAndroid ReactNative))) 
 (def image (r/adapt-react-class (.-Image ReactNative)))
@@ -119,18 +121,27 @@
    (for [[t1 t2] (partition-all 2 tags)]
      ^{:key (first t1)} [tags-line t1 t2])])
 
+(defn header []
+  [view
+   [tool-bar {:title "MamboBox"
+              :style {:height 40}
+              :actions [{:title "Upload psd"} {:title "Settings"}]}]
+   [text-input {:placeholder "Search music..."}]])
+
 (defn app-root []
   (let [selected-tab (subscribe [:selected-tab])]
-   (fn []
-     [scrollable-tab-view {:initial-page @selected-tab
-                           :on-change-tab #(dispatch [:change-tab (.-i %)])}
-      [view {:tab-label "Favorites"
-             :style {:flex 1}}
-       [my-favorites-tab]]
-      [view {:tab-label "Hot"
-             :style {:flex 1}} [hot-tab]]
-      [view {:tab-label "Explore"
-             :style {:flex 1}} [tags-tab]]])))
+    (fn []
+      [view {:style {:flex 1}}
+       [header]
+       [scrollable-tab-view {:initial-page @selected-tab
+                             :on-change-tab #(dispatch [:change-tab (.-i %)])}
+        [view {:tab-label "Favorites"
+               :style {:flex 1}}
+         [my-favorites-tab]]
+        [view {:tab-label "Hot"
+               :style {:flex 1}} [hot-tab]]
+        [view {:tab-label "Explore"
+               :style {:flex 1}} [tags-tab]]]])))
 
 #_(defn pager []
   [view-pager {:init-page 0 :style {:height 300}} 
