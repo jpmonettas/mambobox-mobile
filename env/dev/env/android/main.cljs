@@ -1,7 +1,8 @@
  (ns ^:figwheel-no-load env.android.main
   (:require [reagent.core :as r]
             [mambobox-mobile.android.core :as core]
-            [figwheel.client :as figwheel :include-macros true]))
+            [figwheel.client :as figwheel :include-macros true]
+            [devtools.core :as devt]))
 
  (enable-console-print!)
 
@@ -14,4 +15,7 @@
  :heads-up-display false
  :jsload-callback #(swap! cnt inc))
 
+(devt/install!)
 (core/init)
+
+

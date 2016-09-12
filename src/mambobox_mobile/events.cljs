@@ -44,6 +44,13 @@
        (assoc-in [:player-status :paused] false))))
 
 (reg-event-db
+ :load-song
+ [validate-spec-mw debug]
+ (fn [db [_ duration]]
+   (-> db
+       (assoc-in [:player-status :playing-song-duration] duration))))
+
+(reg-event-db
  :change-tab
  [validate-spec-mw debug]
  (fn [db [_ tab-idx]]

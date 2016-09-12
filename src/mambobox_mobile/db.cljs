@@ -24,9 +24,18 @@
                           :artist-name "Latin Vibe"
                           :duration 412
                           :url "http://192.168.1.8:9999/resources/music/La_llave.mp3"}]
-             :favorites-songs [{:song-name "Guguanco del gran combo" :artist-name "El gran combo de puerto rico" :duration 410}
-                               {:song-name "Por tu amor" :artist-name "Latin Vibe" :duration 411}
-                               {:song-name "La llave" :artist-name "Latin Vibe" :duration 412}
+             :favorites-songs [{:song-name "Guguanco del gran combo"
+                          :artist-name "El gran combo de puerto rico"
+                          :duration 410
+                          :url "http://192.168.1.8:9999/resources/music/Guaguanco.mp3"}
+                         {:song-name "Por tu amor"
+                          :artist-name "Latin Vibe"
+                          :duration 411
+                          :url "http://192.168.1.8:9999/resources/music/Por_tu_amor.mp3"}
+                         {:song-name "La llave"
+                          :artist-name "Latin Vibe"
+                          :duration 412
+                          :url "http://192.168.1.8:9999/resources/music/La_llave.mp3"}
                                {:song-name "Super song 0" :artist-name "Mega artist a" :duration 120}
                                {:song-name "Super song 1" :artist-name "Mega artist b" :duration 121}
                                {:song-name "Super song 2" :artist-name "Mega artist c" :duration 122}

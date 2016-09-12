@@ -30,7 +30,6 @@
                                                                     :main          "env.android.main"
                                                                     :output-dir    "target/android"
                                                                     :optimizations :none
-                                                                    :preloads [devtools.preload]
                                                                     :source-map     true}}}}
                                                      
                    :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}

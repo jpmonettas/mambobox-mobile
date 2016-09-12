@@ -1,5 +1,8 @@
 package com.mamboboxmobile;
 
+import android.media.AudioManager;
+import android.os.Bundle;
+
 import com.facebook.react.ReactActivity;
 import com.brentvatne.react.ReactVideoPackage;
 
@@ -12,5 +15,11 @@ public class MainActivity extends ReactActivity {
     @Override
     protected String getMainComponentName() {
         return "MamboboxMobile";
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
     }
 }

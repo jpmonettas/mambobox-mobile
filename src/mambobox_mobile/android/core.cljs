@@ -54,8 +54,8 @@
 (defn format-duration [seconds]
   (str (quot seconds 60) ":" (mod seconds 60)))
 
-(defn song [{:keys [song-name artist-name duration] :as song}]
-  [touchable-opacity {:on-press #(dispatch [:play-song song])}
+(defn song [{:keys [song-name artist-name duration] :as s}]
+  [touchable-opacity {:on-press #(dispatch [:play-song s])}
    [view {:style {:padding 10
                   :margin 2
                   :border-width 1
@@ -136,17 +136,6 @@
                 :placeholder-text-color :white
                 :underline-color-android :white}]])
 
-(def video-player-instance (cljs.core/atom))
-
-(defn video-player-wrapper [url paused]
-  (create-class
-   {:component-did-mount (fn [this]
-                           )
-    :reagent-render (fn []
-                      [video {:source {:uri url}
-                              :play-in-background true
-                              :play-when-inactive true
-                              :paused paused}])}))
 (defn player []
   (let [player-status (subscribe [:player-status])]
     (fn []
@@ -177,7 +166,13 @@
                   :style {:margin 5}}]]
           [icon {:name "step-forward" :size 18 :style {:margin 10}}]]]
         [slider]
-        [video-player-wrapper url (:paused ps)]]))))
+        [video {:source {:uri url}
+                :play-in-background true
+                :play-when-inactive true
+                :paused (:paused ps)
+                #_(comment :on-load #(dispatch [:load-song (.-duration %)])
+                          :on-end #(dispatch [:playing-song-finished])
+                          :on-progress #(dispatch [:playing-song-progress]))}]]))))
 
 (defn app-root []
   (let [selected-tab (subscribe [:selected-tab])]
@@ -198,35 +193,6 @@
         [view {:tab-label "Explore"
                :style {:flex 1}} [tags-tab]]]
        [player]])))
-
-#_(defn pager []
-  [view-pager {:init-page 0 :style {:height 300}} 
-   [view {:style {:height 200 :background-color "#345678" }}
-    ]
-   [view {:style {:background-color "#FFFF45"}}
-    [text {} "chauuuuuuuuusito"]]
-   ])
-
-#_(defn app-root []
-  (let [greeting (subscribe [:get-greeting])
-        player-status (subscribe [:player-status])]
-    (fn []
-      #_[pager]
-      [view {:style {:flex-direction "column" :margin 40 :align-items "center"}}
-       [text {} (str "holaaaaaaaaaa testtt : " (:playing @player-status) "]")]
-       [video {:source {:uri "http://192.168.1.8:1122/Rehab.mp3"}
-               :play-in-background true
-               :play-when-inactive true
-               :paused (:playing @player-status)}]
-       [text {:style {:font-size 30 :font-weight "100" :margin-bottom 20 :text-align "center"}} @greeting]
-       [image {:source logo-img
-               :style  {:width 80 :height 80 :margin-bottom 30}}]
-       [touchable-highlight {:style {:background-color "#999" :padding 10 :border-radius 5}
-                             :on-press #(dispatch [:toggle-play])}
-        [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "stop/pause"]]
-       [touchable-highlight {:style {:background-color "#999" :padding 10 :border-radius 5}
-                             :on-press pick-and-upload}
-        [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "upload file"]]])))
 
 
 
