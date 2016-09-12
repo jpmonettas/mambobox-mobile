@@ -29,6 +29,10 @@
     app-db))
 
 
+;;;;;;;;;;;;
+;; Player ;;
+;;;;;;;;;;;;
+
 (reg-event-db
  :toggle-play
  [validate-spec-mw debug]
@@ -44,11 +48,41 @@
        (assoc-in [:player-status :paused] false))))
 
 (reg-event-db
- :load-song
+ :play-song-ready
  [validate-spec-mw debug]
  (fn [db [_ duration]]
    (-> db
-       (assoc-in [:player-status :playing-song-duration] duration))))
+       (assoc-in [:player-status :playing-song-duration] duration)
+       (assoc-in [:player-status :playing-song-progress] 0))))
+
+(reg-event-db
+ :playing-song-finished
+ [validate-spec-mw debug]
+ (fn [db [_ _]]
+   (-> db)))
+
+(reg-event-db
+ :playing-song-progress-report
+ []
+ (fn [db [_ progress]]
+   (-> db
+       (assoc-in [:player-status :playing-song-progress] progress))))
+
+(reg-event-db
+ :player-progress-sliding
+ (fn [db [_ v]]
+   (-> db
+       (assoc-in [:player-status :playing-progress-sliding] v))))
+
+(reg-event-db
+ :player-progress-sliding-complete
+ [validate-spec-mw debug]
+ (fn [db [_ v]]
+   (-> db
+       (assoc-in [:player-status :playing-song-progress] (* (-> db :player-status :playing-progress-sliding)
+                                                            (-> db :player-status :playing-song-duration))))))
+
+
 
 (reg-event-db
  :change-tab

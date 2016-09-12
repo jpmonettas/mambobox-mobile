@@ -165,14 +165,17 @@
                   :size 25
                   :style {:margin 5}}]]
           [icon {:name "step-forward" :size 18 :style {:margin 10}}]]]
-        [slider]
+        [slider {:value (/ (:playing-song-progress ps)
+                           (:playing-song-duration ps))
+                 :on-sliding-complete #(dispatch [:player-progress-sliding-complete])
+                 :on-value-change #(dispatch [:player-progress-sliding %])}]
         [video {:source {:uri url}
                 :play-in-background true
                 :play-when-inactive true
                 :paused (:paused ps)
-                #_(comment :on-load #(dispatch [:load-song (.-duration %)])
-                          :on-end #(dispatch [:playing-song-finished])
-                          :on-progress #(dispatch [:playing-song-progress]))}]]))))
+                :on-load #(dispatch [:play-song-ready (.-duration %)])
+                :on-end #(dispatch [:playing-song-finished])
+                :on-progress #(dispatch [:playing-song-progress-report (.-currentTime %)])}]]))))
 
 (defn app-root []
   (let [selected-tab (subscribe [:selected-tab])]
