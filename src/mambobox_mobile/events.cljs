@@ -33,7 +33,15 @@
  :toggle-play
  [validate-spec-mw debug]
  (fn [db [_ value]]
-   (update db :playing not)))
+   (update-in db [:player-status :paused] not)))
+
+(reg-event-db
+ :play-song
+ [validate-spec-mw debug]
+ (fn [db [_ song]]
+   (-> db
+       (assoc-in [:player-status :playing-song] song)
+       (assoc-in [:player-status :paused] false))))
 
 (reg-event-db
  :change-tab

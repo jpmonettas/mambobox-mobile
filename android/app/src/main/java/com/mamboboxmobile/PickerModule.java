@@ -51,7 +51,7 @@ public class PickerModule extends ReactContextBaseJavaModule implements Activity
 
 		try {
 			final Intent intent = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
-
+			intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
 
 			final Intent chooserIntent = Intent.createChooser(intent, "Pick a file");
 

@@ -7,7 +7,7 @@
                  [org.clojure/clojurescript "1.9.227"]
                  [reagent "0.6.0-rc" :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server]]
                  [re-frame "0.8.0"]]
-  :plugins [[lein-cljsbuild "1.1.1"]
+  :plugins [[lein-cljsbuild "1.1.4"]
             [lein-figwheel "0.5.0-6"]]
   :clean-targets ["target/" "index.ios.js" "index.android.js"]
   :aliases {"prod-build" ^{:doc "Recompile code with prod profile."}
@@ -31,9 +31,7 @@
                                                                     :output-dir    "target/android"
                                                                     :optimizations :none
                                                                     :preloads [devtools.preload]
-                                                                    :source-map     true
-                                                                    :external-config {:devtools/config {:features-to-install    [:formatters]
-                                                                                                        :bypass-availability-checks true}}}}}}
+                                                                    :source-map     true}}}}
                                                      
                    :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}
              :prod {:cljsbuild {:builds {:ios     {:source-paths ["src" "mambobox-core/src/cljc" "env/prod"]

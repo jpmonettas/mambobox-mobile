@@ -1,6 +1,5 @@
 (ns mambobox-mobile.db
-  (:require [clojure.spec :as s]
-            [devtools.core :as devt]))
+  (:require [clojure.spec :as s]))
 
 ;; spec of app-db
 
@@ -8,11 +7,23 @@
 
 ;; initial state of app-db
 (def app-db {:player-status {:paused true
-                             :playing-song nil}
-             :ui {:selected-tab 1}
-             :hot-songs [{:song-name "Guguanco del gran combo" :artist-name "El gran combo de puerto rico" :duration 410}
-                               {:song-name "Por tu amor" :artist-name "Latin Vibe" :duration 411}
-                               {:song-name "La llave" :artist-name "Latin Vibe" :duration 412}]
+                             :playing-song {:song-name "Por tu amor"
+                                            :artist-name "Latin Vibe"
+                                            :duration 411
+                                            :url "http://192.168.1.8:9999/resources/music/Por_tu_amor.mp3"}}
+             :ui {:selected-tab 0}
+             :hot-songs [{:song-name "Guguanco del gran combo"
+                          :artist-name "El gran combo de puerto rico"
+                          :duration 410
+                          :url "http://192.168.1.8:9999/resources/music/Guaguanco.mp3"}
+                         {:song-name "Por tu amor"
+                          :artist-name "Latin Vibe"
+                          :duration 411
+                          :url "http://192.168.1.8:9999/resources/music/Por_tu_amor.mp3"}
+                         {:song-name "La llave"
+                          :artist-name "Latin Vibe"
+                          :duration 412
+                          :url "http://192.168.1.8:9999/resources/music/La_llave.mp3"}]
              :favorites-songs [{:song-name "Guguanco del gran combo" :artist-name "El gran combo de puerto rico" :duration 410}
                                {:song-name "Por tu amor" :artist-name "Latin Vibe" :duration 411}
                                {:song-name "La llave" :artist-name "Latin Vibe" :duration 412}
