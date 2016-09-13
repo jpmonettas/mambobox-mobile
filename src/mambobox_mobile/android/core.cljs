@@ -182,7 +182,7 @@
     (fn []
       [view {:style {:flex 1}}
        [header]
-       [scrollable-tab-view {:initial-page @selected-tab
+       [scrollable-tab-view {:page @selected-tab
                              :on-change-tab #(dispatch [:change-tab (.-i %)])
                              :tab-bar-background-color "#9303a7"
                              :tab-bar-active-text-color :white

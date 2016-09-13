@@ -1,8 +1,9 @@
 (ns mambobox-mobile.events
   (:require
-    [re-frame.core :refer [reg-event-db after debug]]
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx after debug]]
     [clojure.spec :as s]
-    [mambobox-mobile.db :as db :refer [app-db]]))
+    [mambobox-mobile.db :as db :refer [app-db]]
+    [mambobox-mobile.fxs]))
 
 ;; -- Middleware ------------------------------------------------------------
 ;;
@@ -27,6 +28,25 @@
   [validate-spec-mw debug]
   (fn [_ _]
     app-db))
+
+(reg-event-fx
+ :pick-song-and-upload
+ (fn [cofx _]
+   ;; select-song effect recieves an event to generate
+   ;; when song selected. Will generate that event with the
+   ;; selected song
+   {:select-song :song-for-upload-selected}))
+
+(reg-event-fx
+ :song-for-upload-selected
+   (fn [cofx [_ file-path]]
+     {:upload-song file-path}))
+
+(reg-event-fx
+ :bla
+ [(inject-cofx :device-info) debug]
+ (fn [cofx _]
+   {:db (assoc (:db cofx) :di (:device-info cofx))}))
 
 
 ;;;;;;;;;;;;
