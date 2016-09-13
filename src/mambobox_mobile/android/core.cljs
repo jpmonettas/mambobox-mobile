@@ -54,7 +54,7 @@
 (defn format-duration [seconds]
   (str (quot seconds 60) ":" (mod seconds 60)))
 
-(defn song [{:keys [song-name artist-name duration] :as s}]
+(defn song [s]
   [touchable-opacity {:on-press #(dispatch [:play-song s])}
    [view {:style {:padding 10
                   :margin 2
@@ -70,8 +70,8 @@
             :size 20}]
      [view 
       [text {:style {:font-weight :bold
-                     :font-size 17}} song-name]
-      [text {} (str artist-name " . " (format-duration duration))]]]
+                     :font-size 17}} (:mb.song/name s)]
+      [text {} (str (:mb.artist/name s) " . " (format-duration (:mb.song/duration s)))]]]
     [icon {:name "ellipsis-v"
            :style {:padding 10
                    :margin 5}
@@ -139,8 +139,8 @@
 (defn player []
   (let [player-status (subscribe [:player-status])]
     (fn []
-      (let [ps @player-status
-            {:keys [song-name artist-name url]} (:playing-song ps)]
+      (let [pl-stat @player-status
+            pl-song (:playing-song pl-stat)]
        [view {:style {:border-width 1
                       :padding-top 10
                       :padding-bottom 10}}
@@ -156,23 +156,23 @@
           [view {}
            [text {:style {:font-weight :bold
                           :font-size 17}}
-            song-name]
-           [text {} artist-name]]]
+            (:mb.song/name pl-song)]
+           [text {} (:mb.artist/name pl-song)]]]
          [view {:style {:margin 10 :flex-direction :row}}
           [icon {:name "step-backward" :size 18 :style {:margin 10}}]
           [touchable-opacity {:on-press #(dispatch [:toggle-play])}
-           [icon {:name (if (:paused ps) "play" "pause")
+           [icon {:name (if (:paused pl-stat) "play" "pause")
                   :size 25
                   :style {:margin 5}}]]
           [icon {:name "step-forward" :size 18 :style {:margin 10}}]]]
-        [slider {:value (/ (:playing-song-progress ps)
-                           (:playing-song-duration ps))
+        [slider {:value (/ (:playing-song-progress pl-stat)
+                           (:playing-song-duration pl-stat))
                  :on-sliding-complete #(dispatch [:player-progress-sliding-complete])
                  :on-value-change #(dispatch [:player-progress-sliding %])}]
-        [video {:source {:uri url}
+        [video {:source {:uri (:mb.song/url pl-song)}
                 :play-in-background true
                 :play-when-inactive true
-                :paused (:paused ps)
+                :paused (:paused pl-stat)
                 :on-load #(dispatch [:play-song-ready (.-duration %)])
                 :on-end #(dispatch [:playing-song-finished])
                 :on-progress #(dispatch [:playing-song-progress-report (.-currentTime %)])}]]))))

@@ -17,7 +17,7 @@
 
 (def validate-spec-mw
   (if goog.DEBUG
-    (after (partial check-and-throw ::db/app-db))
+    (after (partial check-and-throw ::db/db))
     []))
 
 ;; -- Handlers --------------------------------------------------------------
