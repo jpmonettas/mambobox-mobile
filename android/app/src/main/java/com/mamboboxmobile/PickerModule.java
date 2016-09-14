@@ -9,10 +9,19 @@ import android.net.Uri;
 import android.provider.MediaStore;
 
 import com.facebook.react.bridge.ActivityEventListener;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableMap;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class PickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
@@ -62,13 +71,23 @@ public class PickerModule extends ReactContextBaseJavaModule implements Activity
 		}
 	}
 
-	private String getRealPathFromURI(Context context, Uri contentUri) {
-		String[] proj = { MediaStore.Audio.Media.DATA };
+	private WritableMap getDataFromUri(Context context, Uri contentUri) {
+		String[] proj = { MediaStore.Audio.Media.TITLE,MediaStore.Audio.Media.DISPLAY_NAME,MediaStore.Audio.Media.DATA,MediaStore.Audio.Media.ARTIST,MediaStore.Audio.Media.ALBUM,MediaStore.Audio.Media.TRACK,MediaStore.Audio.Media.YEAR };
 		CursorLoader loader = new CursorLoader(context, contentUri, proj, null, null, null);
 		Cursor cursor = loader.loadInBackground();
-		int column_index = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
+
+		WritableMap data= Arguments.createMap();
+
 		cursor.moveToFirst();
-		return cursor.getString(column_index);
+		data.putString("title", cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)));
+		data.putString("displayName", cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)));
+		data.putString("path", cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)));
+		data.putString("artist", cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)));
+		data.putString("album", cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)));
+		data.putString("track", cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)));
+
+
+		return data;
 	}
 
 	// You can get the result here
@@ -84,7 +103,8 @@ public class PickerModule extends ReactContextBaseJavaModule implements Activity
 					if (uri == null) {
 						mPickerPromise.reject(E_NO_DATA_FOUND, "No data found");
 					} else {
-						mPickerPromise.resolve(getRealPathFromURI(this.getReactApplicationContext(),uri));
+						ReadableMap data=getDataFromUri(this.getReactApplicationContext(),uri);
+						mPickerPromise.resolve(data);
 					}
 				}
 
