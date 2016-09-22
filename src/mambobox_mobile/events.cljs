@@ -30,23 +30,72 @@
     app-db))
 
 (reg-event-fx
+ :error
+ [debug]
+ (fn [_ [_ error-msg]]
+   {:toast error-msg}))
+
+(reg-event-fx
+ :back
+ [debug]
+ (fn [cofx [_ _]]
+   (cond
+     (not (-> cofx :db :player-status :collapsed?)) {:dispatch [:toggle-player-collapsed]})))
+
+(reg-event-fx
  :pick-song-and-upload
+ [debug]
  (fn [cofx _]
    ;; select-song effect recieves an event to generate
    ;; when song selected. Will generate that event with the
    ;; selected song
-   {:select-song :song-for-upload-selected}))
+   {:select-song {:with-selected-event :song-for-upload-selected}}))
+
+(reg-event-db
+ :open-preferences
+ [validate-spec-mw debug]
+ (fn [db _]
+   db))
 
 (reg-event-fx
  :song-for-upload-selected
-   (fn [cofx [_ file-path]]
-     {:upload-song file-path}))
+ [validate-spec-mw debug (inject-cofx :device-info)]
+ (fn [cofx [_ song]]
+   (let [not-id (rand-int 10000)]
+     ;; TODO For some reason if we call this two fxs the notification
+     ;; only gets created after the upload completes
+     {:create-sys-notification {:id not-id
+                                :subject "Uploading to mambobox"
+                                :message (:displayName song)}
+      :upload-song {:song-path (:path song)
+                    :file-name (:displayName song)
+                    :device-id (-> cofx :device-info :uniq-id)} 
+      
+      :db (-> (:db cofx)
+              (update :uploading assoc (:path song) {:name (:displayName song)
+                                                     :notification-id not-id}))})))
+
 
 (reg-event-fx
- :bla
- [(inject-cofx :device-info) debug]
- (fn [cofx _]
-   {:db (assoc (:db cofx) :di (:device-info cofx))}))
+ :file-uploaded
+ [validate-spec-mw debug]
+ (fn [cofx [_ path]]
+   (let [not-id (get-in (:db cofx) [:uploading path :notification-id])]
+    {:db (-> (:db cofx)
+             (update :uploading dissoc path))
+     :remove-sys-notification not-id})))
+
+(reg-event-fx
+ :file-upload-error
+ [validate-spec-mw debug]
+ (fn [cofx [_ path error]]
+   (let [not-id (get-in (:db cofx) [:uploading path :notification-id])]
+     ;; If the error happens too quick, we aren't being able to remove the notification
+     ;; looks like it wasn't created yet
+    {:db (-> (:db cofx)
+             (update :uploading dissoc path))
+     :remove-sys-notification not-id
+     :dispatch [:error error]})))
 
 
 ;;;;;;;;;;;;
@@ -57,7 +106,13 @@
  :toggle-play
  [validate-spec-mw debug]
  (fn [db [_ value]]
-   (update-in db [:player-status :paused] not)))
+   (update-in db [:player-status :paused?] not)))
+
+(reg-event-db
+ :toggle-player-collapsed
+ [validate-spec-mw debug]
+ (fn [db [_ value]]
+   (update-in db [:player-status :collapsed?] not)))
 
 (reg-event-db
  :play-song
@@ -65,7 +120,7 @@
  (fn [db [_ song]]
    (-> db
        (assoc-in [:player-status :playing-song] song)
-       (assoc-in [:player-status :paused] false))))
+       (assoc-in [:player-status :paused?] false))))
 
 (reg-event-db
  :play-song-ready
