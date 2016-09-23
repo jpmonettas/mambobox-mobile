@@ -117,9 +117,9 @@
 (reg-event-db
  :play-song
  [validate-spec-mw debug]
- (fn [db [_ song]]
+ (fn [db [_ song-id]]
    (-> db
-       (assoc-in [:player-status :playing-song] song)
+       (assoc-in [:player-status :playing-song-id] song-id)
        (assoc-in [:player-status :paused?] false))))
 
 (reg-event-db

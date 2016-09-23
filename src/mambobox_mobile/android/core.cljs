@@ -44,7 +44,7 @@
     (cljs.pprint/cl-format nil "~2'0d:~2'0d" (quot seconds 60) (mod seconds 60))))
 
 (defn song [s]
-  [touchable-opacity {:on-press #(dispatch [:play-song s])}
+  [touchable-opacity {:on-press #(dispatch [:play-song (:mb.song/id s)])}
    [view {:style {:padding 10
                   :margin 2
                   :border-width 1
@@ -78,24 +78,24 @@
      [list-view {:dataSource (build-list-view-datasource (apply array @hot-songs))
                  :renderRow (comp r/as-element song)}])))
 
-(def tags [["chacha" "#ff0000"]
-           ["mambo" "#9303a7"]
-           ["latin-jazz" "#993366"]
-           ["guaracha" "#64a8d1"]
-           ["salsa dura" "#2219b2"]
-           ["romantica" "#cb0077"]
-           ["bolero" "#e5399e"]
-           ["pachanga" "#999900"]
-           ["boogaloo" "#d9534f"]
-           ["son" "#ff7800"]
-           ["montuno" "#ff9a40"]
-           ["songo" "#ffa700"]
-           ["danzon" "#ffbd40"]
-           ["rumba" "#138900"]
-           ["guaguanco" "#389e28"]
-           ["yambu" "#1dd300"]
-           ["columbia" "#52e93a"]
-           ["afro" "#a64b00"]])
+(def tags {"chacha" "#ff0000"
+           "mambo" "#9303a7"
+           "latin-jazz" "#993366"
+           "guaracha" "#64a8d1"
+           "salsa dura" "#2219b2"
+           "romantica" "#cb0077"
+           "bolero" "#e5399e"
+           "pachanga" "#999900"
+           "boogaloo" "#d9534f"
+           "son" "#ff7800"
+           "montuno" "#ff9a40"
+           "songo" "#ffa700"
+           "danzon" "#ffbd40"
+           "rumba" "#138900"
+           "guaguanco" "#389e28"
+           "yambu" "#1dd300"
+           "columbia" "#52e93a"
+           "afro" "#a64b00"})
 
 (defn tags-line [[t1-text t1-bg t1-fg]
                  [t2-text t2-bg t2-fg]]
@@ -112,7 +112,7 @@
 
 (defn tags-tab []
   [scroll-view 
-   (for [[t1 t2] (partition-all 2 tags)]
+   (for [[t1 t2] (partition-all 2 (into [] tags))]
      ^{:key (first t1)} [tags-line t1 t2])])
 
 (defn header []
@@ -133,51 +133,74 @@
   [view {:style {:margin 30
                  :flex-direction :row
                  :justify-content :space-between}}
-   [icon {:name "random"
-          :size 12
-          :style {}}]
-   [icon {:name "step-backward"
-          :size 25
-          :style {}}]
+   [icon {:name "random" :size 12}]
+   [icon {:name "step-backward" :size 25}]
    [touchable-opacity {:on-press #(dispatch [:toggle-play])}
-    [icon {:name (if paused? "play" "pause")
-           :size 50
-           :style {}}]]
-   [icon {:name "step-forward"
-          :size 25
-          :style {}}]
-   [icon {:name "repeat"
-          :size 12
-          :style {}}]])
+    [icon {:name (if paused? "play" "pause") :size 50}]]
+   [icon {:name "step-forward" :size 25}]
+   [icon {:name "repeat" :size 12}]])
+
+(defn song-editor [song]
+  (let [card-style {:flex-direction :row
+                    :elevation 3
+                    :padding 5
+                    :margin-bottom 9
+                    :background-color :white
+                    :justify-content :space-between
+                    :align-items :center}
+        text-style {:font-size 18}]
+    [view {:style {:padding-bottom 10
+                   :padding-top 10}}
+     [view {:style {:height 100
+                    :margin-bottom 30
+                    :justify-content :space-between}}
+      [view {:style card-style}
+       [text {:style text-style} (:mb.song/name song)]
+       [icon {:name "pencil" :size 17}]]
+      [view {:style card-style}
+       [text {:style text-style} (:mb.artist/name song)]
+       [icon {:name "pencil" :size 17}]]
+      [view {:style card-style}
+       [text {:style text-style} (:mb.album/name song)]
+       [icon {:name "pencil" :size 17}]]]
+     [view {:style {:flex-direction :row
+                    :height 100
+                    :justify-content :center
+                    :align-items :center}}
+      (for [tag (:mb.song/tags song)]
+        [view {:key tag
+               :style {:margin 5
+                       :padding 5
+                       :background-color (get tags tag)}}
+         [text {:style {:color :white}} tag]])
+      [icon {:name "tags" :size 35}]]]))
 
 (defn expanded-player []
-  (let [player-status (subscribe [:player-status])]
+  (let [player-status (subscribe [:player-status])
+        playing-song (subscribe [:playing-song])]
     (fn []
       (let [pl-stat @player-status
-            paused? (:paused? pl-stat)
-            playing-song (:playing-song pl-stat)]
-        [view {:style {:height 300
+            paused? (:paused? pl-stat)]
+        [view {:style {:height 420
                        :justify-content :space-between}}
-         [view {:style {:flex-direction :row
-                        :justify-content :center}}
-          [text {:style {:font-weight :bold
-                         :font-size 17}}
-           (:mb.song/name playing-song)]
-          [text {} (str "(" (:mb.artist/name playing-song) ")")]]
-         [view {:style {:flex-direction :row
-                        :margin 10}}
-          [text {}  (format-duration (:playing-song-progress pl-stat))]
-          [slider {:style {:flex 0.8}
-                   :value (/ (:playing-song-progress pl-stat)
-                             (:playing-song-duration pl-stat))
-                   :on-sliding-complete #(dispatch [:player-progress-sliding-complete])
-                   :on-value-change #(dispatch [:player-progress-sliding %])}]
-          [text {} (format-duration (:playing-song-duration pl-stat))]]
-         [full-song-controls paused?]]))))
+         [song-editor @playing-song]
+         [view {}
+          [view {:style {:flex-direction :row
+                         :margin 10}}
+           [text {}  (format-duration (:playing-song-progress pl-stat))]
+           [slider {:style {:flex 0.8}
+                    :value (/ (:playing-song-progress pl-stat)
+                              (:playing-song-duration pl-stat))
+                    :on-sliding-complete #(dispatch [:player-progress-sliding-complete])
+                    :on-value-change #(dispatch [:player-progress-sliding %])}]
+           [text {} (format-duration (:playing-song-duration pl-stat))]]
+          [full-song-controls paused?]]]))))
 
 (defn collapsed-player [playing-song paused?]
   [view {:style {:flex-direction :row
-                 :justify-content :space-between}}
+                 :height 60
+                 :justify-content :space-between
+                 :align-items :center}}
    [touchable-opacity {:on-press #(dispatch [:toggle-player-collapsed])}
     [view {:flex-direction :row}
      [icon {:name "headphones"
@@ -197,13 +220,19 @@
             :style {:margin 5}}]]]])
 
 (defn player []
-  (let [player-status (subscribe [:player-status])]
+  (let [player-status (subscribe [:player-status])
+        playing-song (subscribe [:playing-song])]
     (fn []
       (let [pl-stat @player-status
-            pl-song (:playing-song pl-stat)pl-song (:playing-song pl-stat)]
-       [view {:style {:border-width 1
-                      :padding-top 10
-                      :padding-bottom 10}}
+            pl-song @playing-song]
+        [view {:style {:elevation 10
+                       :flex 1
+                       :position :absolute
+                       :bottom 0
+                       :left 0
+                       :right 0
+                       :padding 10
+                       :background-color :white}}
         (if (:collapsed? pl-stat)
           [collapsed-player pl-song (:paused? pl-stat)]
           [expanded-player])
