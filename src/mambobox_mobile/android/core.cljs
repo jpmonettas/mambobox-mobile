@@ -28,12 +28,50 @@
 (def icon (r/adapt-react-class (js/require "react-native-vector-icons/FontAwesome")))
 (def scrollable-tab-view (r/adapt-react-class (js/require "react-native-scrollable-tab-view")))
 (def back-android (.-BackAndroid ReactNative))
+(def DialogAndroid (js/require "react-native-dialogs"))
 
+(def tags {"chacha" "#ff0000"
+           "mambo" "#9303a7"
+           "latin-jazz" "#993366"
+           "guaracha" "#64a8d1"
+           "salsa dura" "#2219b2"
+           "romantica" "#cb0077"
+           "bolero" "#e5399e"
+           "pachanga" "#999900"
+           "boogaloo" "#d9534f"
+           "son" "#ff7800"
+           "montuno" "#ff9a40"
+           "songo" "#ffa700"
+           "danzon" "#ffbd40"
+           "rumba" "#138900"
+           "guaguanco" "#389e28"
+           "yambu" "#1dd300"
+           "columbia" "#52e93a"
+           "afro" "#a64b00"})
 
 (def logo-img (js/require "./images/cljs.png"))
 
 (defn alert [title]
-      (.alert (.-Alert ReactNative) title))
+  (.alert (.-Alert ReactNative) title))
+
+(defn show-edit-song-dialog [title song-attr-key song]
+  (let [d (DialogAndroid.)]
+    (.set d #js{:title title
+                :positiveText "Save"
+                :negativeText "Cancel"
+                :input #js{:prefill (get song song-attr-key)
+                           :allowEmptyInput false
+                           :callback #(dispatch [:edit-song-attr (:mb.song/id song) song-attr-key %])}})
+    (.show d)))
+
+(defn show-tag-select-dialog [song]
+  (let [d (DialogAndroid.)]
+    (.set d #js{:title "Add tag to song"
+                :positiveText "Add"
+                :negativeText "Cancel"
+                :items (clj->js (keys tags))
+                :itemsCallback (fn [_ tag] (dispatch [:add-tag-to-song (:mb.song/id song) tag]))})
+    (.show d)))
 
 (defn build-list-view-datasource [rows-data]
   (let [ds (DataSource. #js {:rowHasChanged (constantly false)})]
@@ -78,24 +116,7 @@
      [list-view {:dataSource (build-list-view-datasource (apply array @hot-songs))
                  :renderRow (comp r/as-element song)}])))
 
-(def tags {"chacha" "#ff0000"
-           "mambo" "#9303a7"
-           "latin-jazz" "#993366"
-           "guaracha" "#64a8d1"
-           "salsa dura" "#2219b2"
-           "romantica" "#cb0077"
-           "bolero" "#e5399e"
-           "pachanga" "#999900"
-           "boogaloo" "#d9534f"
-           "son" "#ff7800"
-           "montuno" "#ff9a40"
-           "songo" "#ffa700"
-           "danzon" "#ffbd40"
-           "rumba" "#138900"
-           "guaguanco" "#389e28"
-           "yambu" "#1dd300"
-           "columbia" "#52e93a"
-           "afro" "#a64b00"})
+
 
 (defn tags-line [[t1-text t1-bg t1-fg]
                  [t2-text t2-bg t2-fg]]
@@ -154,15 +175,18 @@
      [view {:style {:height 100
                     :margin-bottom 30
                     :justify-content :space-between}}
-      [view {:style card-style}
-       [text {:style text-style} (:mb.song/name song)]
-       [icon {:name "pencil" :size 17}]]
-      [view {:style card-style}
-       [text {:style text-style} (:mb.artist/name song)]
-       [icon {:name "pencil" :size 17}]]
-      [view {:style card-style}
-       [text {:style text-style} (:mb.album/name song)]
-       [icon {:name "pencil" :size 17}]]]
+      [touchable-opacity {:on-press #(show-edit-song-dialog "New song name" :mb.song/name song)}
+       [view {:style card-style}
+        [text {:style text-style} (:mb.song/name song)]
+        [icon {:name "pencil" :size 17}]]]
+      [touchable-opacity {:on-press #(show-edit-song-dialog "New artist name" :mb.artist/name song)}
+       [view {:style card-style}
+        [text {:style text-style} (:mb.artist/name song)]
+        [icon {:name "pencil" :size 17}]]]
+      [touchable-opacity {:on-press #(show-edit-song-dialog "New album name" :mb.album/name song)}
+       [view {:style card-style}
+        [text {:style text-style} (:mb.album/name song)]
+        [icon {:name "pencil" :size 17}]]]]
      [view {:style {:flex-direction :row
                     :height 100
                     :justify-content :center
@@ -173,7 +197,8 @@
                        :padding 5
                        :background-color (get tags tag)}}
          [text {:style {:color :white}} tag]])
-      [icon {:name "tags" :size 35}]]]))
+      [touchable-opacity {:on-press #(show-tag-select-dialog song)}
+       [icon {:name "tags" :size 35}]]]]))
 
 (defn expanded-player []
   (let [player-status (subscribe [:player-status])

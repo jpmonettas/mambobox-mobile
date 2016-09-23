@@ -126,8 +126,13 @@ android {
         }
     }
 }
+// added for react-native-dialogs
+repositories {
+    maven { url "https://jitpack.io" }
+}
 
 dependencies {
+    compile project(':react-native-dialogs')
     compile project(':react-native-system-notification')
     compile project(':react-native-device-info')
     compile fileTree(dir: "libs", include: ["*.jar"])

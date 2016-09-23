@@ -12,7 +12,8 @@
     "react-native-scrollable-tab-view",
     "react-native-vector-icons/FontAwesome",
     "react-native-device-info",
-    "react-native-system-notification"
+    "react-native-system-notification",
+    "react-native-dialogs"
   ],
   "imageDirs": [
     "images"

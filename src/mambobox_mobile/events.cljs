@@ -165,3 +165,15 @@
  (fn [db [_ tab-idx]]
    (assoc-in db [:ui :selected-tab] tab-idx)))
 
+(reg-event-db
+ :edit-song-attr
+ [validate-spec-mw debug]
+ (fn [db [_ song-id song-attr-key new-val]]
+   db))
+
+(reg-event-db
+ :add-tag-to-song
+ [validate-spec-mw debug]
+ (fn [db [_ song-id tag]]
+   db))
+

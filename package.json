@@ -9,6 +9,7 @@
     "react": "15.3.1",
     "react-native": "0.32.0",
     "react-native-device-info": "^0.9.5",
+    "react-native-dialogs": "0.0.19",
     "react-native-fileupload": "file:///home/jmonetta/my-projects/react-native-fileupload",
     "react-native-scrollable-tab-view": "^0.6.0",
     "react-native-system-notification": "^0.2.1",
