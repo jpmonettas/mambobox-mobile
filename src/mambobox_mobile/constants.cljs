@@ -1,3 +1,3 @@
 (ns mambobox-mobile.constants)
 
-  (def server-url "http://192.168.1.8:1155")
+(def server-url "http://192.168.1.8:8090")

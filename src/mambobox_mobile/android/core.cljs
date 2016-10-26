@@ -293,7 +293,7 @@
 
 
 (defn init []
-  (dispatch-sync [:initialize-db])
+  (dispatch-sync [:initialize-app])
   (.registerComponent app-registry "MamboboxMobile" #(r/reactify-component app-root))
   (.addListener device-event-emitter "uploadProgress" (fn [e] (.log js/console e)))
   (.addEventListener back-android "hardwareBackPress" (fn []

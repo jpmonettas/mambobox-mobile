@@ -27,7 +27,7 @@
 
 (s/def :db/uploading (s/map-of :db.uploading.song/path :db.uploading/song))
 
-(s/def ::db (s/keys :req-un [:db/player-status
+(s/def ::db any? #_(s/keys :req-un [:db/player-status
                              :db/ui
                              :db/hot-songs-ids
                              :db/favorites-songs-ids

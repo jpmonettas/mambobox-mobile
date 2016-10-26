@@ -3,7 +3,9 @@
     [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx after debug]]
     [clojure.spec :as s]
     [mambobox-mobile.db :as db :refer [app-db]]
-    [mambobox-mobile.fxs]))
+    [mambobox-mobile.fxs]
+    [day8.re-frame.http-fx]
+    [mambobox-mobile.services :as services]))
 
 ;; -- Middleware ------------------------------------------------------------
 ;;
@@ -23,17 +25,21 @@
 
 ;; -- Handlers --------------------------------------------------------------
 
-(reg-event-db
-  :initialize-db
-  [validate-spec-mw debug]
-  (fn [_ _]
-    app-db))
+(reg-event-fx
+  :initialize-app
+  [validate-spec-mw debug (inject-cofx :device-info)]
+  (fn [cofxs _]
+    (let [{:keys [uniq-id locale country]} (:device-info cofxs)]
+     {:db app-db
+      :http-xhrio (assoc (services/register-device-http-fx uniq-id locale country)
+                         :on-failure [:error]
+                         :on-success [:success])})))
 
 (reg-event-fx
  :error
  [debug]
  (fn [_ [_ error-msg]]
-   {:toast error-msg}))
+   {:toast (str error-msg)}))
 
 (reg-event-fx
  :back
