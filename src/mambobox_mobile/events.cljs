@@ -25,6 +25,10 @@
 
 ;; -- Handlers --------------------------------------------------------------
 
+;;;;;;;;;;;;;;;;;;;;
+;; Initialization ;;
+;;;;;;;;;;;;;;;;;;;;
+
 (reg-event-fx
   :initialize-app
   [validate-spec-mw debug (inject-cofx :device-info)]
@@ -33,7 +37,28 @@
      {:db app-db
       :http-xhrio (assoc (services/register-device-http-fx uniq-id locale country)
                          :on-failure [:error]
-                         :on-success [:success])})))
+                         :on-success [:initialize-success])
+      ;; TODO Remove this hack, it's only until we call register if it wasn't registered
+      :dispatch [:initialize-success]})))
+
+(reg-event-fx
+  :initialize-success
+  [debug (inject-cofx :device-info)]
+  (fn [cofxs _]
+    {:http-xhrio (assoc (services/get-initial-dump-http-fx (-> cofxs :device-info :uniq-id))
+                        :on-failure [:error]
+                        :on-success [:initial-dump])}))
+
+(reg-event-db
+ :initial-dump
+ [validate-spec-mw debug]
+ (fn [db [_ data]]
+   (.log js/console "Got initial dump ! " data)
+   db))
+
+;;;;;;;;;;;;;;;;;;;;;;
+;; General handlers ;;
+;;;;;;;;;;;;;;;;;;;;;;
 
 (reg-event-fx
  :error
@@ -47,6 +72,10 @@
  (fn [cofx [_ _]]
    (cond
      (not (-> cofx :db :player-status :collapsed?)) {:dispatch [:toggle-player-collapsed]})))
+
+
+
+
 
 (reg-event-fx
  :pick-song-and-upload

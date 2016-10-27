@@ -39,11 +39,11 @@
 (reg-fx
  :upload-song
  (fn [{:keys [song-path file-name device-id]}]
-   (println "UPLOADING song")
-   (upload-file (clj->js {:uploadUrl (str server-url "/uploads")
+   (println "UPLOADING song" server-url "/song/upload?device-id=" device-id)
+   (upload-file (clj->js {:uploadUrl (str server-url "/song/upload?device-id=" device-id)
                           :method "POST"
                           :headers {"Accept" "application/json"}
-                          :fields {"device-id" device-id}
+                          :fields {}
                           :files [{:filename file-name
                                    :filepath song-path}]})
                 (fn [err result]
