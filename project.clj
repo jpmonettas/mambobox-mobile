@@ -3,13 +3,16 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
+
   :dependencies [[org.clojure/clojure "1.9.0-alpha11"]
                  [org.clojure/clojurescript "1.9.227"]
                  [reagent "0.6.0-rc" :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server]]
                  [re-frame "0.8.0"]
                  [funcool/promesa "1.5.0"]
                  [day8.re-frame/http-fx "0.1.2"]
-                 [cljs-ajax "0.5.8"]]
+                 [cljs-ajax "0.5.8"]
+                 [camel-snake-kebab "0.4.0"]]
+  
   :plugins [[lein-cljsbuild "1.1.4"]
             [lein-figwheel "0.5.0-6"]]
   :clean-targets ["target/" "index.ios.js" "index.android.js"]

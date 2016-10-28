@@ -8,18 +8,18 @@
     (:songs db)))
 
 (reg-sub
-  :favorites-songs-ids
+  :favourites-songs-ids
   (fn [db _]
-    (:favorites-songs-ids db)))
+    (:favourites-songs-ids db)))
 
 (reg-sub
- :favorites-songs
+ :favourites-songs
  (fn [_ _]
    [(subscribe [:songs])
-    (subscribe [:favorites-songs-ids])])
+    (subscribe [:favourites-songs-ids])])
  (fn [[songs f-ids] _]
    (filter (fn [s]
-             (contains? (into #{} f-ids) (:mb.song/id s)))
+             (contains? (into #{} f-ids) (:db/id s)))
            songs)))
 
 (reg-sub
@@ -34,7 +34,7 @@
     (subscribe [:hot-songs-ids])])
  (fn [[songs h-ids] _]
    (filter (fn [s]
-             (contains? (into #{} h-ids) (:mb.song/id s)))
+             (contains? (into #{} h-ids) (:db/id s)))
            songs)))
 
 
@@ -55,7 +55,7 @@
     (subscribe [:playing-song-id])])
  (fn [[songs psi] _]
    (first (filter (fn [s]
-                    (= psi (:mb.song/id s)))
+                    (= psi (:db/id s)))
                   songs))))
 ;;;;;;;;;;;;;
 ;; UI subs ;;

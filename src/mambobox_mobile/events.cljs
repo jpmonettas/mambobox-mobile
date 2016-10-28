@@ -52,9 +52,12 @@
 (reg-event-db
  :initial-dump
  [validate-spec-mw debug]
- (fn [db [_ data]]
+ (fn [db [_ {:keys [songs favourites-songs-ids hot-songs-ids] :as data}]]
    (.log js/console "Got initial dump ! " data)
-   db))
+   (-> db
+       (assoc :favourites-songs-ids favourites-songs-ids)
+       (assoc :hot-songs-ids hot-songs-ids)
+       (assoc :songs songs))))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; General handlers ;;

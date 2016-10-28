@@ -6,6 +6,8 @@
             [mambobox-mobile.subs]
             [clojure.spec :as s]
             [mambobox-core.core-spec]
+            [mambobox-core.generic-utils :as gen-utils]
+            [mambobox-mobile.constants :as constants]
             [devtools.core :as dt]))
 
 (def ReactNative (js/require "react-native"))
@@ -61,7 +63,7 @@
                 :negativeText "Cancel"
                 :input #js{:prefill (get song song-attr-key)
                            :allowEmptyInput false
-                           :callback #(dispatch [:edit-song-attr (:mb.song/id song) song-attr-key %])}})
+                           :callback #(dispatch [:edit-song-attr (:db/id song) song-attr-key %])}})
     (.show d)))
 
 (defn show-tag-select-dialog [song]
@@ -70,7 +72,7 @@
                 :positiveText "Add"
                 :negativeText "Cancel"
                 :items (clj->js (keys tags))
-                :itemsCallback (fn [_ tag] (dispatch [:add-tag-to-song (:mb.song/id song) tag]))})
+                :itemsCallback (fn [_ tag] (dispatch [:add-tag-to-song (:db/id song) tag]))})
     (.show d)))
 
 (defn build-list-view-datasource [rows-data]
@@ -82,7 +84,7 @@
     (cljs.pprint/cl-format nil "~2'0d:~2'0d" (quot seconds 60) (mod seconds 60))))
 
 (defn song [s]
-  [touchable-opacity {:on-press #(dispatch [:play-song (:mb.song/id s)])}
+  [touchable-opacity {:on-press #(dispatch [:play-song (:db/id s)])}
    [view {:style {:padding 10
                   :margin 2
                   :border-width 1
@@ -97,24 +99,28 @@
             :size 20}]
      [view 
       [text {:style {:font-weight :bold
-                     :font-size 17}} (:mb.song/name s)]
-      [text {} (str (:mb.artist/name s) " . " (format-duration (:mb.song/duration s)))]]]
+                     :font-size 17}} (-> s :mb.song/name gen-utils/denormalize-entity-name-string)]
+      [text {} (-> s :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]]
     [icon {:name "ellipsis-v"
            :style {:padding 10
                    :margin 5}
            :size 20}]]])
 
-(defn my-favorites-tab []
-  (let [favorites-songs (subscribe [:favorites-songs])]
+(defn my-favourites-tab []
+  (let [favourites-songs (subscribe [:favourites-songs])]
    (fn []
-     [list-view {:dataSource (build-list-view-datasource (apply array @favorites-songs))
-                 :renderRow (comp r/as-element song)}])))
+     [list-view {:dataSource (build-list-view-datasource (apply array @favourites-songs))
+                 :renderRow (comp r/as-element song)
+                 ;; Takes out a warning, will be deprecated soon
+                 :enableEmptySections true}])))
 
 (defn hot-tab []
   (let [hot-songs (subscribe [:hot-songs])]
    (fn []
      [list-view {:dataSource (build-list-view-datasource (apply array @hot-songs))
-                 :renderRow (comp r/as-element song)}])))
+                 :renderRow (comp r/as-element song)
+                 ;; Takes out a warning, will be deprecated soon
+                 :enableEmptySections true}])))
 
 
 
@@ -177,15 +183,15 @@
                     :justify-content :space-between}}
       [touchable-opacity {:on-press #(show-edit-song-dialog "New song name" :mb.song/name song)}
        [view {:style card-style}
-        [text {:style text-style} (:mb.song/name song)]
+        [text {:style text-style} (gen-utils/denormalize-entity-name-string (:mb.song/name song))]
         [icon {:name "pencil" :size 17}]]]
       [touchable-opacity {:on-press #(show-edit-song-dialog "New artist name" :mb.artist/name song)}
        [view {:style card-style}
-        [text {:style text-style} (:mb.artist/name song)]
+        [text {:style text-style} (-> song :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]
         [icon {:name "pencil" :size 17}]]]
       [touchable-opacity {:on-press #(show-edit-song-dialog "New album name" :mb.album/name song)}
        [view {:style card-style}
-        [text {:style text-style} (:mb.album/name song)]
+        [text {:style text-style} (-> song :album :mb.album/name gen-utils/denormalize-entity-name-string)]
         [icon {:name "pencil" :size 17}]]]]
      [view {:style {:flex-direction :row
                     :height 100
@@ -236,8 +242,8 @@
      [view {}
       [text {:style {:font-weight :bold
                      :font-size 17}}
-       (:mb.song/name playing-song)]
-      [text {} (:mb.artist/name playing-song)]]]]
+       (-> playing-song :mb.song/name gen-utils/denormalize-entity-name-string)]
+      [text {} (-> playing-song :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]]]
    [view {:style {:margin 10 :flex-direction :row}}
     [touchable-opacity {:on-press #(dispatch [:toggle-play])}
      [icon {:name (if paused? "play" "pause")
@@ -261,7 +267,7 @@
         (if (:collapsed? pl-stat)
           [collapsed-player pl-song (:paused? pl-stat)]
           [expanded-player])
-        [video {:source {:uri (:mb.song/url pl-song)}
+        [video {:source {:uri (str constants/server-url (:mb.song/url pl-song))}
                 :play-in-background true
                 :play-when-inactive true
                 :paused (:paused? pl-stat)
@@ -270,7 +276,8 @@
                 :on-progress #(dispatch [:playing-song-progress-report (.-currentTime %)])}]]))))
 
 (defn app-root []
-  (let [selected-tab (subscribe [:selected-tab])]
+  (let [selected-tab (subscribe [:selected-tab])
+        player-status (subscribe [:player-status])]
     (fn []
       [view {:style {:flex 1}}
        [header]
@@ -281,19 +288,21 @@
                              :tab-bar-active-text-color :white
                              :tab-bar-inactive-text-color :white
                              :tab-bar-underline-style {:background-color "white"}}
-        [view {:tab-label "Favorites"
+        [view {:tab-label "Favourites"
                :style {:flex 1}}
-         [my-favorites-tab]]
+         [my-favourites-tab]]
         [view {:tab-label "Hot"
                :style {:flex 1}} [hot-tab]]
         [view {:tab-label "Explore"
                :style {:flex 1}} [tags-tab]]]
-       [player]])))
+       (when (:playing-song-id @player-status)
+         [player])])))
 
 
 
 (defn init []
   (dispatch-sync [:initialize-app])
+  (set! (.-disableYellowBox js/console) true)
   (.registerComponent app-registry "MamboboxMobile" #(r/reactify-component app-root))
   (.addListener device-event-emitter "uploadProgress" (fn [e] (.log js/console e)))
   (.addEventListener back-android "hardwareBackPress" (fn []
