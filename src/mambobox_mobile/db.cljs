@@ -17,9 +17,19 @@
 (s/def :db.ui/selected-tab integer?)
 (s/def :db/ui (s/keys :opt-un [:db.ui/selected-tab]))
 
-(s/def :db/hot-songs (s/coll-of :db/id))
-(s/def :db/favourites-songs (s/coll-of :db/id))
+(s/def :db/hot-songs-ids (s/coll-of :db/id))
+(s/def :db/user-uploaded-songs-ids (s/coll-of :db/id))
+(s/def :db/favourites-songs-ids (s/coll-of :db/id))
 (s/def :db/songs (s/coll-of :mb/song))
+(s/def :db/all-artists (s/coll-of :mb.song/artist))
+(s/def :db/artist-albums (s/coll-of :mb.song/album))
+(s/def :db/selected-album (s/keys :req [:db/id
+                                        :mb.album/name]
+                                  :opt-un [:db/songs]))
+(s/def :db/selected-artist (s/keys :req [:db/id
+                                         :mb.artist/name]
+                                   :opt-un [:db/artist-albums
+                                            :db/selected-album]))
 
 (s/def :db.uploading.song/name string?)
 (s/def :db.uploading.song/notification-id integer?)
@@ -34,8 +44,11 @@
                              :db/ui
                              :db/hot-songs-ids
                              :db/favourites-songs-ids
-                             :db/songs]
-                    :opt-un [:db/uploading]))
+                             :db/user-uploaded-songs-ids
+                             :db/songs
+                             :db/all-artists]
+                    :opt-un [:db/uploading
+                             :db/selected-artist]))
 
 ;; initial state of app-db
 (def app-db {:player-status {:paused? true
@@ -43,4 +56,6 @@
              :ui {:selected-tab 0}
              :hot-songs-ids #{}
              :favourites-songs-ids #{}
+             :user-uploaded-songs-ids #{}
+             :all-artists #{}
              :songs #{}})

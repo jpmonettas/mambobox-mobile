@@ -19,4 +19,14 @@
   (merge http-fxs-commons
          {:method :post
           :uri (str constants/server-url "/song/initial-dump?device-id=" device-id)}))
+
+(defn load-artist-albums-http-fx [device-id artist-id]
+  (merge http-fxs-commons
+         {:method :post
+          :uri (str constants/server-url "/song/explore-artist?device-id=" device-id "&artist-id=" artist-id)}))
+
+(defn load-album-songs-http-fx [device-id album-id]
+  (merge http-fxs-commons
+         {:method :post
+          :uri (str constants/server-url "/song/explore-album?device-id=" device-id "&album-id=" album-id)}))
                                  

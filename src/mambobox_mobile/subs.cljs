@@ -37,6 +37,30 @@
              (contains? (into #{} h-ids) (:db/id s)))
            songs)))
 
+(reg-sub
+ :user-uploaded-songs-ids
+  (fn [db _]
+    (:user-uploaded-songs-ids db)))
+
+(reg-sub
+ :user-uploaded-songs
+ (fn [_ _]
+   [(subscribe [:songs])
+    (subscribe [:user-uploaded-songs-ids])])
+ (fn [[songs us-ids] _]
+   (filter (fn [s]
+             (contains? (into #{} us-ids) (:db/id s)))
+           songs)))
+
+(reg-sub
+ :all-artists
+  (fn [db _]
+    (:all-artists db)))
+
+(reg-sub
+ :selected-artist
+  (fn [db _]
+    (:selected-artist db)))
 
 (reg-sub
  :player-status

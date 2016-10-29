@@ -122,6 +122,74 @@
                  ;; Takes out a warning, will be deprecated soon
                  :enableEmptySections true}])))
 
+(defn user-uploaded-songs-tab []
+  (let [user-uploaded-songs (subscribe [:user-uploaded-songs])]
+   (fn []
+     [list-view {:dataSource (build-list-view-datasource (apply array @user-uploaded-songs))
+                 :renderRow (comp r/as-element song)
+                 ;; Takes out a warning, will be deprecated soon
+                 :enableEmptySections true}])))
+
+(defn artist [a]
+  [touchable-opacity {:on-press #(dispatch [:load-artist-albums a])}
+   [view {:style {:padding 15
+                  :border-width 1
+                  :margin 2
+                  :border-color "rgba(0,0,0,0.1)"}}
+    [text {:style {:font-weight :bold
+                   :font-size 17}}
+     (gen-utils/denormalize-entity-name-string (:mb.artist/name a))]]])
+
+(defn album [a]
+  [touchable-opacity {:on-press #(dispatch [:load-album-songs a])}
+   [view {:style {:padding 15
+                  :border-width 1
+                  :margin 2
+                  :border-color "rgba(0,0,0,0.1)"}}
+    [text {:style {:font-weight :bold
+                   :font-size 17}}
+     (gen-utils/denormalize-entity-name-string (:mb.album/name a))]]])
+
+(defn all-artists-tab []
+  (let [all-artists (subscribe [:all-artists])
+        selected-artist (subscribe [:selected-artist])]
+    (fn []
+      (let [s-artist @selected-artist]
+        (if s-artist
+          (if (:selected-album s-artist)
+            ;; All albums songs
+            [view
+             [text {:style {:font-size 17
+                            :background-color "#9303a7"
+                            :color :white
+                            :margin 10
+                            :padding 5
+                            :align-self :center}}
+              (gen-utils/denormalize-entity-name-string (-> s-artist :selected-album :mb.album/name ))]
+             [list-view {:dataSource (build-list-view-datasource (apply array (-> s-artist :selected-album :songs )))
+                         :renderRow (comp r/as-element song)
+                         ;; Takes out a warning, will be deprecated soon
+                         :enableEmptySections true}]]
+            
+            ;; No selected album, only artist so show albums
+            [view
+             [text {:style {:font-size 17
+                            :background-color "#9303a7"
+                            :color :white
+                            :margin 10
+                            :padding 5
+                            :align-self :center}}
+              (gen-utils/denormalize-entity-name-string (:mb.artist/name s-artist))]
+             [list-view {:dataSource (build-list-view-datasource (apply array (:artist-albums s-artist)))
+                         :renderRow (comp r/as-element album)
+                         ;; Takes out a warning, will be deprecated soon
+                         :enableEmptySections true}]])
+        
+         [list-view {:dataSource (build-list-view-datasource (apply array @all-artists))
+                     :renderRow (comp r/as-element artist)
+                     ;; Takes out a warning, will be deprecated soon
+                     :enableEmptySections true}])))))
+
 
 
 (defn tags-line [[t1-text t1-bg t1-fg]
@@ -289,12 +357,15 @@
                              :tab-bar-inactive-text-color :white
                              :tab-bar-underline-style {:background-color "white"}}
         [view {:tab-label "Favourites"
-               :style {:flex 1}}
-         [my-favourites-tab]]
+               :style {:flex 1}} [my-favourites-tab]]
         [view {:tab-label "Hot"
                :style {:flex 1}} [hot-tab]]
         [view {:tab-label "Explore"
-               :style {:flex 1}} [tags-tab]]]
+               :style {:flex 1}} [tags-tab]]
+        [view {:tab-label "My songs"
+               :style {:flex 1}} [user-uploaded-songs-tab]]
+        [view {:tab-label "Artists"
+               :style {:flex 1}} [all-artists-tab]]]
        (when (:playing-song-id @player-status)
          [player])])))
 

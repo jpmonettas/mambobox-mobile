@@ -53,12 +53,14 @@
 (reg-event-db
  :initial-dump
  [validate-spec-mw debug]
- (fn [db [_ {:keys [songs favourites-songs-ids hot-songs-ids] :as data}]]
+ (fn [db [_ {:keys [songs favourites-songs-ids hot-songs-ids user-uploaded-songs-ids all-artists] :as data}]]
    (.log js/console "Got initial dump ! " data)
    (-> db
        (assoc :favourites-songs-ids favourites-songs-ids)
+       (assoc :user-uploaded-songs-ids user-uploaded-songs-ids)
        (assoc :hot-songs-ids hot-songs-ids)
-       (assoc :songs songs))))
+       (assoc :songs songs)
+       (assoc :all-artists all-artists))))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; General handlers ;;
@@ -75,7 +77,10 @@
  [debug]
  (fn [cofx [_ _]]
    (cond
-     (not (-> cofx :db :player-status :collapsed?)) {:dispatch [:toggle-player-collapsed]})))
+     (not (-> cofx :db :player-status :collapsed?)) {:dispatch [:toggle-player-collapsed]}
+     (-> cofx :db :selected-artist :selected-album) {:db (update (:db cofx) :selected-artist dissoc :selected-album)}
+     (-> cofx :db :selected-artist) {:db (dissoc (:db cofx) :selected-artist)}
+     )))
 
 
 
@@ -216,3 +221,36 @@
  (fn [db [_ song-id tag]]
    db))
 
+;;;;;;;;;;;;;;;;
+;; Artist tab ;;
+;;;;;;;;;;;;;;;;
+
+(reg-event-fx
+ :load-artist-albums
+ [validate-spec-mw debug (inject-cofx :device-info)]
+ (fn [cofxs [_ artist]]
+   {:db (assoc (:db cofxs) :selected-artist artist)
+    :http-xhrio (assoc (services/load-artist-albums-http-fx (-> cofxs :device-info :uniq-id) (:db/id artist))
+                       :on-failure [:error]
+                       :on-success [:artist-albums])}))
+
+(reg-event-db
+ :artist-albums
+ [validate-spec-mw debug]
+ (fn [db [_ albums]]
+   (update db :selected-artist assoc :artist-albums albums)))
+
+(reg-event-fx
+ :load-album-songs
+ [validate-spec-mw debug (inject-cofx :device-info)]
+ (fn [cofxs [_ album]]
+   {:db (assoc-in (:db cofxs) [:selected-artist :selected-album] album)
+    :http-xhrio (assoc (services/load-album-songs-http-fx (-> cofxs :device-info :uniq-id) (:db/id album))
+                       :on-failure [:error]
+                       :on-success [:album-songs])}))
+
+(reg-event-db
+ :album-songs
+ [validate-spec-mw debug]
+ (fn [db [_ songs]]
+   (update-in db [:selected-artist :selected-album] assoc :songs songs)))
