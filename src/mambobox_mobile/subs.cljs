@@ -63,6 +63,11 @@
     (:selected-artist db)))
 
 (reg-sub
+ :selected-tag
+  (fn [db _]
+    (:selected-tag db)))
+
+(reg-sub
  :player-status
   (fn [db _]
     (:player-status db)))

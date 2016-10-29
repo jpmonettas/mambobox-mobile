@@ -30,7 +30,9 @@
                                          :mb.artist/name]
                                    :opt-un [:db/artist-albums
                                             :db/selected-album]))
-
+(s/def :db.song/tag string?)
+(s/def :db/selected-tag (s/keys :req-un [:db.song/tag]
+                                :opt-un [:db/songs]))
 (s/def :db.uploading.song/name string?)
 (s/def :db.uploading.song/notification-id integer?)
 (s/def :db.uploading/song (s/keys :req-un [:db.uploading.song/name
@@ -48,7 +50,8 @@
                              :db/songs
                              :db/all-artists]
                     :opt-un [:db/uploading
-                             :db/selected-artist]))
+                             :db/selected-artist
+                             :db/selected-tag]))
 
 ;; initial state of app-db
 (def app-db {:player-status {:paused? true

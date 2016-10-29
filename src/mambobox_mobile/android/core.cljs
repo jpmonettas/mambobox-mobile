@@ -191,24 +191,47 @@
                      :enableEmptySections true}])))))
 
 
-
 (defn tags-line [[t1-text t1-bg t1-fg]
                  [t2-text t2-bg t2-fg]]
   (let [tag-style {:padding 20
                    :text-align "center"
                    :margin 10
-                   :flex 0.5
+                   :flex 1
                    :font-weight :bold
                    :font-size 15
                    :color "white"}]
-   [view {:flex-direction :row}
-    [text {:style (merge tag-style {:background-color t1-bg})} t1-text]
-    [text {:style (merge tag-style {:background-color t2-bg})} t2-text]]))
+    [view {:flex-direction :row}
+     [touchable-opacity {:on-press #(dispatch [:load-tag-songs t1-text])
+                         :style {:flex 0.5}}
+      [text {:style (merge tag-style {:background-color t1-bg})} t1-text]]
+     [touchable-opacity {:on-press #(dispatch [:load-tag-songs t2-text])
+                         :style {:flex 0.5}}
+      [text {:style (merge tag-style {:background-color t2-bg})} t2-text]]]))
 
 (defn tags-tab []
-  [scroll-view 
-   (for [[t1 t2] (partition-all 2 (into [] tags))]
-     ^{:key (first t1)} [tags-line t1 t2])])
+  (let [selected-tag (subscribe [:selected-tag])]
+    (fn []
+      (if-let [st @selected-tag]
+        ;; show tag songs
+        [view
+         [text {:style {:font-size 17
+                        :background-color "#9303a7"
+                        :color :white
+                        :margin 10
+                        :padding 5
+                        :align-self :center}}
+          (:tag st)]
+         (if (pos? (count (:songs st)))
+          [list-view {:dataSource (build-list-view-datasource (apply array (:songs st)))
+                      :renderRow (comp r/as-element song)
+                      ;; Takes out a warning, will be deprecated soon
+                      :enableEmptySections true}]
+          [text (str "No songs under " (:tag st))])]
+        
+        ;; show tags for selection
+        [scroll-view 
+         (for [[t1 t2] (partition-all 2 (into [] tags))]
+           ^{:key (first t1)} [tags-line t1 t2])]))))
 
 (defn header []
   [view {:style {:background-color "#9303a7"}}

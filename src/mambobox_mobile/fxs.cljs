@@ -58,7 +58,8 @@
                                                  :artist {:db/id (get-in song ["artist" "id"])
                                                                   :mb.artist/name (get-in song ["artist" "name"])}
                                                  :album {:db/id (get-in song ["album" "id"])
-                                                                 :mb.album/name (get-in song ["album" "name"])}}])))))))
+                                                         :mb.album/name (get-in song ["album" "name"])}}
+                                 song-path])))))))
 
 (reg-cofx
  :device-info

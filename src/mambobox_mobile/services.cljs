@@ -29,4 +29,14 @@
   (merge http-fxs-commons
          {:method :post
           :uri (str constants/server-url "/song/explore-album?device-id=" device-id "&album-id=" album-id)}))
+
+(defn load-tag-songs-http-fx [device-id tag page]
+  (merge http-fxs-commons
+         {:method :post
+          :uri (str constants/server-url "/song/explore-tag?device-id=" device-id "&tag=" tag "&page=" page)}))
+
+(defn tag-song-http-fx [device-id song-id tag]
+  (merge http-fxs-commons
+         {:method :post
+          :uri (str constants/server-url "/song/" song-id "/tags/" tag "?device-id=" device-id)}))
                                  

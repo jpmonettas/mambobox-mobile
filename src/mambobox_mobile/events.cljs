@@ -80,6 +80,7 @@
      (not (-> cofx :db :player-status :collapsed?)) {:dispatch [:toggle-player-collapsed]}
      (-> cofx :db :selected-artist :selected-album) {:db (update (:db cofx) :selected-artist dissoc :selected-album)}
      (-> cofx :db :selected-artist) {:db (dissoc (:db cofx) :selected-artist)}
+     (-> cofx :db :selected-tag) {:db (dissoc (:db cofx) :selected-tag)}
      )))
 
 
@@ -124,7 +125,7 @@
 (reg-event-fx
  :file-uploaded
  [validate-spec-mw debug]
- (fn [cofx [_ song]]
+ (fn [cofx [_ song path]]
    (let [not-id (get-in (:db cofx) [:uploading path :notification-id])]
     {:db (-> (:db cofx)
              (update :uploading dissoc path)
@@ -215,17 +216,34 @@
  (fn [db [_ tab-idx]]
    (assoc-in db [:ui :selected-tab] tab-idx)))
 
+;;;;;;;;;;;;;;;;;;
+;; Song edition ;;
+;;;;;;;;;;;;;;;;;;
+
 (reg-event-db
  :edit-song-attr
  [validate-spec-mw debug]
  (fn [db [_ song-id song-attr-key new-val]]
    db))
 
-(reg-event-db
+(reg-event-fx
  :add-tag-to-song
+ [debug (inject-cofx :device-info)]
+ (fn [cofxs [_ song-id tag]]
+   {:http-xhrio (assoc (services/tag-song-http-fx (-> cofxs :device-info :uniq-id) song-id tag)
+                       :on-failure [:error]
+                       :on-success [:song-updated])}))
+
+(reg-event-db
+ :song-updated
  [validate-spec-mw debug]
- (fn [db [_ song-id tag]]
-   db))
+ (fn [db [_ updated-song]]
+   (update db :songs (fn [songs]
+                       (map (fn [s]
+                              (if (= (:db/id s) (:db/id updated-song))
+                                updated-song
+                                s))
+                            songs)))))
 
 ;;;;;;;;;;;;;;;;
 ;; Artist tab ;;
@@ -260,3 +278,19 @@
  [validate-spec-mw debug]
  (fn [db [_ songs]]
    (update-in db [:selected-artist :selected-album] assoc :songs songs)))
+
+(reg-event-fx
+ :load-tag-songs
+ [validate-spec-mw debug (inject-cofx :device-info)]
+ (fn [cofxs [_ tag]]
+   {:db (assoc-in (:db cofxs) [:selected-tag :tag] tag)
+    ;; TODO replace page in las argument for paginaiton
+    :http-xhrio (assoc (services/load-tag-songs-http-fx (-> cofxs :device-info :uniq-id) tag 0)
+                       :on-failure [:error]
+                       :on-success [:tag-songs])}))
+
+(reg-event-db
+ :tag-songs
+ [validate-spec-mw debug]
+ (fn [db [_ songs]]
+   (update db :selected-tag assoc :songs songs)))
