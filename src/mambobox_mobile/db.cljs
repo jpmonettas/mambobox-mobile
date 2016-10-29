@@ -9,14 +9,17 @@
 (s/def :db.player/playing-song-duration any?)
 (s/def :db.player/playing-song-progress any?)
 (s/def :db/player-status (s/keys :req-un [:db.player-status/paused?
-                                          :db.player-status/collapsed?
-                                          :db.player-status/playing-song-id]
+                                          :db.player-status/collapsed?]
                                  :opt-un [:db.player/playing-song-duration
+                                          :db.player-status/playing-song-id
                                           :db.player/playing-song-progress]))
-(s/def :db/ui any?)
+
+(s/def :db.ui/selected-tab integer?)
+(s/def :db/ui (s/keys :opt-un [:db.ui/selected-tab]))
+
 (s/def :db/hot-songs (s/coll-of :db/id))
-(s/def :db/favorites-songs (s/coll-of :db/id))
-;; (s/def :db/songs (s/coll-of :mb/song))
+(s/def :db/favourites-songs (s/coll-of :db/id))
+(s/def :db/songs (s/coll-of :mb/song))
 
 (s/def :db.uploading.song/name string?)
 (s/def :db.uploading.song/notification-id integer?)
@@ -27,10 +30,10 @@
 
 (s/def :db/uploading (s/map-of :db.uploading.song/path :db.uploading/song))
 
-(s/def ::db any? #_(s/keys :req-un [:db/player-status
+(s/def ::db (s/keys :req-un [:db/player-status
                              :db/ui
                              :db/hot-songs-ids
-                             :db/favorites-songs-ids
+                             :db/favourites-songs-ids
                              :db/songs]
                     :opt-un [:db/uploading]))
 

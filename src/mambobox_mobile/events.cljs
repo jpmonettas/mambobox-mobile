@@ -16,6 +16,7 @@
   [spec db]
   (when-not (s/valid? spec db)
     (let [explain-data (s/explain-data spec db)]
+      (.log js/console "Spec check failed: " explain-data)
       (throw (ex-info (str "Spec check failed: " explain-data) explain-data)))))
 
 (def validate-spec-mw
