@@ -108,9 +108,10 @@
    (let [not-id (rand-int 10000)]
      ;; TODO For some reason if we call this two fxs the notification
      ;; only gets created after the upload completes
-     {:create-sys-notification {:id not-id
-                                :subject "Uploading to mambobox"
-                                :message (:displayName song)}
+     {
+      ;; :create-sys-notification {:id not-id
+      ;;                           :subject "Uploading to mambobox"
+      ;;                           :message (:displayName song)}
       :upload-song {:song-path (:path song)
                     :file-name (:displayName song)
                     :device-id (-> cofx :device-info :uniq-id)} 
@@ -123,11 +124,16 @@
 (reg-event-fx
  :file-uploaded
  [validate-spec-mw debug]
- (fn [cofx [_ path]]
+ (fn [cofx [_ song]]
    (let [not-id (get-in (:db cofx) [:uploading path :notification-id])]
     {:db (-> (:db cofx)
-             (update :uploading dissoc path))
-     :remove-sys-notification not-id})))
+             (update :uploading dissoc path)
+             (update :songs conj song)
+             (update :user-uploaded-songs-ids conj (:db/id song))
+             (update :all-artists conj (:artist song)))
+     ;; TODO fix notification stuff
+     ;; :remove-sys-notification not-id
+     :toast (str "Uploaded " (:mb.song/name song))})))
 
 (reg-event-fx
  :file-upload-error

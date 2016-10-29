@@ -46,10 +46,19 @@
                           :fields {}
                           :files [{:filename file-name
                                    :filepath song-path}]})
-                (fn [err result]
+                (fn [err song]
                   (if err
                     (dispatch [:file-upload-error song-path err])
-                    (dispatch [:file-uploaded song-path]))))))
+                    (let [song (js->clj (.parse js/JSON (.-data song)))]
+                      (dispatch [:file-uploaded {:db/id (get song "id")
+                                                 :mb.song/name (get song "name")
+                                                 :mb.song/file-id (get song "fileId")
+                                                 :mb.song/plays-count (get song "playsCount")
+                                                 :mb.song/url (get song "url")
+                                                 :artist {:db/id (get-in song ["artist" "id"])
+                                                                  :mb.artist/name (get-in song ["artist" "name"])}
+                                                 :album {:db/id (get-in song ["album" "id"])
+                                                                 :mb.album/name (get-in song ["album" "name"])}}])))))))
 
 (reg-cofx
  :device-info
