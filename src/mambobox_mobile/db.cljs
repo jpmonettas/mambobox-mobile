@@ -31,8 +31,9 @@
                                    :opt-un [:db/artist-albums
                                             :db/selected-album]))
 (s/def :db.song/tag string?)
+(s/def :db/selected-tag-songs-ids (s/coll-of :db/id))
 (s/def :db/selected-tag (s/keys :req-un [:db.song/tag]
-                                :opt-un [:db/songs]))
+                                :opt-un [:db/selected-tag-songs-ids]))
 (s/def :db.uploading.song/name string?)
 (s/def :db.uploading.song/notification-id integer?)
 (s/def :db.uploading/song (s/keys :req-un [:db.uploading.song/name

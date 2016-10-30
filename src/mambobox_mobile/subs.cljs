@@ -5,7 +5,11 @@
 (reg-sub
   :songs
   (fn [db _]
-    (:songs db)))
+    (map (fn [s]
+           (if (contains? (into #{} (:favourites-songs-ids db)) (:db/id s))
+             (assoc s :favourite? true)
+             s))
+     (:songs db))))
 
 (reg-sub
   :favourites-songs-ids
@@ -66,6 +70,18 @@
  :selected-tag
   (fn [db _]
     (:selected-tag db)))
+
+(reg-sub
+ :full-selected-tag
+ (fn [db _]
+   [(subscribe [:songs])
+    (subscribe [:selected-tag])])
+ (fn [[songs selected-tag] _]
+   (when selected-tag
+     (let [selected-tag-songs (filter (fn [s]
+                                       (contains? (:selected-tag-songs-ids selected-tag) (:db/id s)))
+                                     songs)]
+      (assoc selected-tag :songs selected-tag-songs)))))
 
 (reg-sub
  :player-status

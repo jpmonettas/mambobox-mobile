@@ -83,6 +83,23 @@
   (let [seconds (int seconds)]
     (cljs.pprint/cl-format nil "~2'0d:~2'0d" (quot seconds 60) (mod seconds 60))))
 
+(defn favourite-star-icon [fav? song-id]
+  (if fav?
+       [touchable-opacity {:on-press #(dispatch [:rm-from-favourites song-id])}
+        [icon {:name "star"
+               :style {:padding 10
+                       :align-self :center
+                       :margin 5
+                       :color :orange}
+               :size 20}]]
+       [touchable-opacity {:on-press #(dispatch [:add-to-favourites song-id])}
+        [icon {:name "star-o"
+               :style {:padding 10
+                       :align-self :center
+                       :margin 5
+                       :color :black}
+               :size 20}]]))
+
 (defn song [s]
   [touchable-opacity {:on-press #(dispatch [:play-song (:db/id s)])}
    [view {:style {:padding 10
@@ -101,10 +118,12 @@
       [text {:style {:font-weight :bold
                      :font-size 17}} (-> s :mb.song/name gen-utils/denormalize-entity-name-string)]
       [text {} (-> s :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]]
-    [icon {:name "ellipsis-v"
-           :style {:padding 10
-                   :margin 5}
-           :size 20}]]])
+    [view {:flex-direction :row}
+     [favourite-star-icon (:favourite? s) (:db/id s)]
+     [icon {:name "ellipsis-v"
+            :style {:padding 10
+                    :margin 5}
+            :size 20}]]]])
 
 (defn my-favourites-tab []
   (let [favourites-songs (subscribe [:favourites-songs])]
@@ -209,7 +228,7 @@
       [text {:style (merge tag-style {:background-color t2-bg})} t2-text]]]))
 
 (defn tags-tab []
-  (let [selected-tag (subscribe [:selected-tag])]
+  (let [selected-tag (subscribe [:full-selected-tag])]
     (fn []
       (if-let [st @selected-tag]
         ;; show tag songs
@@ -302,10 +321,12 @@
         playing-song (subscribe [:playing-song])]
     (fn []
       (let [pl-stat @player-status
-            paused? (:paused? pl-stat)]
+            paused? (:paused? pl-stat)
+            pl-song @playing-song]
         [view {:style {:height 420
                        :justify-content :space-between}}
-         [song-editor @playing-song]
+         [favourite-star-icon (:favourite? pl-song) (:db/id pl-song)]
+         [song-editor pl-song]
          [view {}
           [view {:style {:flex-direction :row
                          :margin 10}}

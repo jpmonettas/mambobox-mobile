@@ -26,6 +26,13 @@
 
 ;; -- Handlers --------------------------------------------------------------
 
+(reg-event-db
+ :http-no-on-success
+ []
+ (fn [db _]
+   (.log js/console "Warning !!! :http-no-on-success event generated")
+   db))
+
 ;;;;;;;;;;;;;;;;;;;;
 ;; Initialization ;;
 ;;;;;;;;;;;;;;;;;;;;
@@ -293,4 +300,22 @@
  :tag-songs
  [validate-spec-mw debug]
  (fn [db [_ songs]]
-   (update db :selected-tag assoc :songs songs)))
+   (-> db
+       (update :songs into songs)
+       (assoc-in [:selected-tag :selected-tag-songs-ids] (into #{} (map :db/id songs))))))
+
+(reg-event-fx
+ :add-to-favourites 
+ [validate-spec-mw debug (inject-cofx :device-info)]
+ (fn [cofxs [_ song-id]]
+   {:db (update (:db cofxs) :favourites-songs-ids conj song-id)
+    :http-xhrio (assoc (services/set-song-as-favourite-http-fx (-> cofxs :device-info :uniq-id) song-id)
+                       :on-failure [:error])}))
+
+(reg-event-fx
+ :rm-from-favourites  
+ [validate-spec-mw debug (inject-cofx :device-info)]
+ (fn [cofxs [_ song-id]]
+   {:db (update (:db cofxs) :favourites-songs-ids disj song-id)
+    :http-xhrio (assoc (services/unset-song-as-favourite-http-fx (-> cofxs :device-info :uniq-id) song-id)
+                       :on-failure [:error])}))
