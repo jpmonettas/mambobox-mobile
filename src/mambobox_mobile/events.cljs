@@ -88,6 +88,7 @@
      (-> cofx :db :selected-artist :selected-album) {:db (update (:db cofx) :selected-artist dissoc :selected-album)}
      (-> cofx :db :selected-artist) {:db (dissoc (:db cofx) :selected-artist)}
      (-> cofx :db :selected-tag) {:db (dissoc (:db cofx) :selected-tag)}
+     (-> cofx :db :searching) {:db (dissoc (:db cofx) :searching)}
      )))
 
 
@@ -172,13 +173,16 @@
  (fn [db [_ value]]
    (update-in db [:player-status :collapsed?] not)))
 
+(defn play-song [db song-id]
+  (-> db
+      (assoc-in [:player-status :playing-song-id] song-id)
+      (assoc-in [:player-status :paused?] false)))
+
 (reg-event-db
  :play-song
  [validate-spec-mw debug]
  (fn [db [_ song-id]]
-   (-> db
-       (assoc-in [:player-status :playing-song-id] song-id)
-       (assoc-in [:player-status :paused?] false))))
+  (play-song db song-id)))
 
 (reg-event-db
  :play-song-ready
@@ -246,11 +250,12 @@
  [validate-spec-mw debug]
  (fn [db [_ updated-song]]
    (update db :songs (fn [songs]
-                       (map (fn [s]
-                              (if (= (:db/id s) (:db/id updated-song))
-                                updated-song
-                                s))
-                            songs)))))
+                       (into #{}
+                             (map (fn [s]
+                                    (if (= (:db/id s) (:db/id updated-song))
+                                      updated-song
+                                      s))
+                                  songs))))))
 
 ;;;;;;;;;;;;;;;;
 ;; Artist tab ;;
@@ -319,3 +324,50 @@
    {:db (update (:db cofxs) :favourites-songs-ids disj song-id)
     :http-xhrio (assoc (services/unset-song-as-favourite-http-fx (-> cofxs :device-info :uniq-id) song-id)
                        :on-failure [:error])}))
+
+;;;;;;;;;;;;;;;;
+;; Searching  ;;
+;;;;;;;;;;;;;;;;
+
+(reg-event-db
+ :open-search
+ [validate-spec-mw debug]
+ (fn [db _]
+   (assoc db :searching [])))
+
+(reg-event-db
+ :close-search
+ [validate-spec-mw debug]
+ (fn [db _]
+   (dissoc db :searching)))
+
+(reg-event-fx
+ :re-search
+ [debug (inject-cofx :device-info)]
+ (fn [cofxs [_ q]]
+   (if (>= (count q) 3)
+     {:http-xhrio (assoc (services/search-songs-http-fx (-> cofxs :device-info :uniq-id) q)
+                         :on-failure [:error]
+                         :on-success [:search-results])}
+     {:db (assoc (:db cofxs) :searching [])})))
+
+(reg-event-db
+ :search-results
+ [debug]
+ (fn [db [_ songs]]
+   (assoc db :searching songs)))
+
+(reg-event-fx
+ :get-and-play-song
+ [debug (inject-cofx :device-info)]
+ (fn [cofxs [_ song-id]]
+   {:http-xhrio (assoc (services/song-by-id-http-fx (-> cofxs :device-info :uniq-id) song-id)
+                       :on-failure [:error]
+                       :on-success [:song-for-play])}))
+
+(reg-event-db
+ :song-for-play
+ (fn [db [_ song]]
+   (-> db
+       (update :songs conj song)
+       (play-song (:db/id song)))))

@@ -111,3 +111,7 @@
   (fn [db _]
     (-> db :ui :selected-tab)))
 
+(reg-sub
+ :searching
+ (fn [db _]
+   (:searching db)))

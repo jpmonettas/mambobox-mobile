@@ -49,4 +49,14 @@
   (merge http-fxs-commons
          {:method :delete
           :uri (str constants/server-url "/user/favourites/" song-id "?device-id=" device-id)}))
+
+(defn search-songs-http-fx [device-id q]
+  (merge http-fxs-commons
+         {:method :post
+          :uri (str constants/server-url "/song/search?device-id=" device-id "&q=" q)}))
+
+(defn song-by-id-http-fx [device-id song-id]
+  (merge http-fxs-commons
+         {:method :post
+          :uri (str constants/server-url "/song/" song-id "/get?device-id=" device-id)}))
                                  

@@ -43,6 +43,11 @@
 
 (s/def :db/uploading (s/map-of :db.uploading.song/path :db.uploading/song))
 
+(s/def :db.searching/song (s/keys :req [:db/id
+                                        :mb.song/name
+                                        :mb.artist/name]))
+
+(s/def :db/searching (s/coll-of :db.searching/song))
 (s/def ::db (s/keys :req-un [:db/player-status
                              :db/ui
                              :db/hot-songs-ids
@@ -52,7 +57,8 @@
                              :db/all-artists]
                     :opt-un [:db/uploading
                              :db/selected-artist
-                             :db/selected-tag]))
+                             :db/selected-tag
+                             :db/searching]))
 
 ;; initial state of app-db
 (def app-db {:player-status {:paused? true

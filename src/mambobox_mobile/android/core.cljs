@@ -52,6 +52,7 @@
            "afro" "#a64b00"})
 
 (def logo-img (js/require "./images/cljs.png"))
+(def search-img (js/require "./images/search.png"))
 
 (defn alert [title]
   (.alert (.-Alert ReactNative) title))
@@ -108,16 +109,28 @@
                   :border-color "rgba(0,0,0,0.1)"
                   :flex-direction :row
                   :justify-content "space-between"}}
-    [view {:flex-direction :row}
+    [view {:flex-direction :row
+           :flex 1}
      [icon {:name "music"
             :style {:padding 10
                     :margin 5
                     :background-color "rgba(0,0,0,0.1)"}
             :size 20}]
-     [view 
+     [view {:style {:flex 0.8}}
       [text {:style {:font-weight :bold
                      :font-size 17}} (-> s :mb.song/name gen-utils/denormalize-entity-name-string)]
-      [text {} (-> s :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]]
+      [text {} (-> s :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]
+      [view {:style {:flex-direction :row
+                     :align-items :center
+                     :height 25}}
+      (for [tag (:mb.song/tags s)]
+        [view {:key tag
+               :style {:margin 2
+                       :border-radius 5
+                       :padding 3
+                       :background-color (get tags tag)}}
+         [text {:style {:color :white
+                        :font-size 10}} tag]])]]]
     [view {:flex-direction :row}
      [favourite-star-icon (:favourite? s) (:db/id s)]
      [icon {:name "ellipsis-v"
@@ -215,6 +228,7 @@
   (let [tag-style {:padding 20
                    :text-align "center"
                    :margin 10
+                   :elevation 10
                    :flex 1
                    :font-weight :bold
                    :font-size 15
@@ -232,7 +246,7 @@
     (fn []
       (if-let [st @selected-tag]
         ;; show tag songs
-        [view
+        [view {:style {:flex 1}}
          [text {:style {:font-size 17
                         :background-color "#9303a7"
                         :color :white
@@ -252,19 +266,82 @@
          (for [[t1 t2] (partition-all 2 (into [] tags))]
            ^{:key (first t1)} [tags-line t1 t2])]))))
 
+(defn search-song [s]
+  [touchable-opacity {:on-press #(dispatch [:get-and-play-song (:db/id s)])}
+   [view {:style {:padding 10
+                  :margin 5
+                  :elevation 2
+                  :border-width 1
+                  :border-color "rgba(0,0,0,0.1)"
+                  :flex-direction :row
+                  :justify-content :space-between}}
+    [icon {:name "search"
+           :style {:padding 10
+                   :margin 5}
+           :size 20}]
+    [view {:flex 0.8}
+     [text {:style {:font-weight :bold
+                    :font-size 17}} (-> s :mb.song/name gen-utils/denormalize-entity-name-string)]
+     [text {} (-> s :mb.artist/name gen-utils/denormalize-entity-name-string)]
+     [text {} (-> s :mb.album/name gen-utils/denormalize-entity-name-string)]]
+    [icon {:name "headphones"
+           :style {:padding 10
+                   :margin 5}
+           :size 20}]]])
+
+(defn search []
+  (let [searching (subscribe [:searching])
+        query-text-atom (r/atom "")]
+    (fn []
+      (let [songs @searching]
+       [view {:style {:flex 0.8}}
+        [view { :border-width 1
+               :margin-bottom 10
+               :border-color "rgba(0,0,0,0.1)"
+               :background-color "#9303a7"
+               :elevation 3
+               :padding 10}
+         [view {:background-color :white
+                :flex-direction :row
+                :justify-content :space-between
+                :height 40
+                :border-radius 15
+                :overflow :hidden}
+          [icon {:name "search"
+                 :style {:padding 5
+                         :margin 5
+                         :background-color :white}
+                 :size 20}]
+          [text-input {:placeholder "Buscar musica..."
+                       :placeholder-text-color :grey
+                       
+                       :style {:width 250}
+                       :underline-color-android :grey
+                       :on-change-text #(do (reset! query-text-atom %)
+                                            (dispatch [:re-search @query-text-atom]))}]
+          [touchable-opacity {:on-press #(dispatch [:close-search])}
+           [icon {:name "times"
+                  :style {:padding 5
+                          :margin 5
+                          :background-color :white}
+                  :size 20}]]]]
+        [view {}
+         (for [s songs]
+           ^{:key (:db/id s)} [search-song s])]]))))
+
 (defn header []
   [view {:style {:background-color "#9303a7"}}
    [tool-bar {:title "MamboBox"
               :title-color :white
-              :style {:height 40}
+              :style {:height 50}
               :actions [{:title "Subir musica"}
-                        {:title "Preferencias"}]
+                        {:title "Preferencias"}
+                        {:title "Search" :icon search-img :show :always}]
+              
               :on-action-selected #(case %
                                      0 (dispatch [:pick-song-and-upload])
-                                     1 (dispatch [:open-preferences]))}]
-   [text-input {:placeholder "Buscar musica..."
-                :placeholder-text-color :white
-                :underline-color-android :white}]])
+                                     1 (dispatch [:open-preferences])
+                                     2 (dispatch [:open-search]))}]])
 
 (defn full-song-controls [paused?]
   [view {:style {:margin 30
@@ -341,7 +418,7 @@
 
 (defn collapsed-player [playing-song paused?]
   [view {:style {:flex-direction :row
-                 :height 60
+                 :flex 0.2
                  :justify-content :space-between
                  :align-items :center}}
    [touchable-opacity {:on-press #(dispatch [:toggle-player-collapsed])}
@@ -369,11 +446,6 @@
       (let [pl-stat @player-status
             pl-song @playing-song]
         [view {:style {:elevation 10
-                       :flex 1
-                       :position :absolute
-                       :bottom 0
-                       :left 0
-                       :right 0
                        :padding 10
                        :background-color :white}}
         (if (:collapsed? pl-stat)
@@ -389,27 +461,31 @@
 
 (defn app-root []
   (let [selected-tab (subscribe [:selected-tab])
-        player-status (subscribe [:player-status])]
+        player-status (subscribe [:player-status])
+        searching (subscribe [:searching])]
     (fn []
       [view {:style {:flex 1}}
-       [header]
-       [scrollable-tab-view {:initial-page @selected-tab
-                             :page @selected-tab
-                             :on-change-tab #(dispatch [:change-tab (.-i %)])
-                             :tab-bar-background-color "#9303a7"
-                             :tab-bar-active-text-color :white
-                             :tab-bar-inactive-text-color :white
-                             :tab-bar-underline-style {:background-color "white"}}
-        [view {:tab-label "Favourites"
-               :style {:flex 1}} [my-favourites-tab]]
-        [view {:tab-label "Hot"
-               :style {:flex 1}} [hot-tab]]
-        [view {:tab-label "Explore"
-               :style {:flex 1}} [tags-tab]]
-        [view {:tab-label "My songs"
-               :style {:flex 1}} [user-uploaded-songs-tab]]
-        [view {:tab-label "Artists"
-               :style {:flex 1}} [all-artists-tab]]]
+       (if @searching
+         [search]
+         [view {:style {:flex 1}}
+          [header]
+          [scrollable-tab-view {:initial-page @selected-tab
+                                :page @selected-tab
+                                :on-change-tab #(dispatch [:change-tab (.-i %)])
+                                :tab-bar-background-color "#9303a7"
+                                :tab-bar-active-text-color :white
+                                :tab-bar-inactive-text-color :white
+                                :tab-bar-underline-style {:background-color "white"}}
+           [view {:tab-label "Favourites"
+                  :style {:flex 1}} [my-favourites-tab]]
+           [view {:tab-label "Hot"
+                  :style {:flex 1}} [hot-tab]]
+           [view {:tab-label "Explore"
+                  :style {:flex 1}} [tags-tab]]
+           [view {:tab-label "My songs"
+                  :style {:flex 1}} [user-uploaded-songs-tab]]
+           [view {:tab-label "Artists"
+                  :style {:flex 1}} [all-artists-tab]]]])
        (when (:playing-song-id @player-status)
          [player])])))
 
