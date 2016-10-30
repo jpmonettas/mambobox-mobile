@@ -168,8 +168,7 @@
                   :border-width 1
                   :margin 2
                   :border-color "rgba(0,0,0,0.1)"}}
-    [text {:style {:font-weight :bold
-                   :font-size 17}}
+    [text {:style {:font-size 17}}
      (gen-utils/denormalize-entity-name-string (:mb.artist/name a))]]])
 
 (defn album [a]
@@ -178,8 +177,7 @@
                   :border-width 1
                   :margin 2
                   :border-color "rgba(0,0,0,0.1)"}}
-    [text {:style {:font-weight :bold
-                   :font-size 17}}
+    [text {:style {:font-size 17}}
      (gen-utils/denormalize-entity-name-string (:mb.album/name a))]]])
 
 (defn all-artists-tab []
