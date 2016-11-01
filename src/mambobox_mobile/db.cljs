@@ -6,13 +6,15 @@
 (s/def :db.player-status/paused? boolean?)
 (s/def :db.player-status/collapsed? boolean?)
 (s/def :db.player-status/playing-song-id :db/id)
-(s/def :db.player/playing-song-duration any?)
-(s/def :db.player/playing-song-progress any?)
+(s/def :db.player-status/playing-song-duration any?)
+(s/def :db.player-status/playing-song-progress any?)
+(s/def :db.player-status/reported-play boolean?)
 (s/def :db/player-status (s/keys :req-un [:db.player-status/paused?
                                           :db.player-status/collapsed?]
-                                 :opt-un [:db.player/playing-song-duration
+                                 :opt-un [:db.player-status/playing-song-duration
                                           :db.player-status/playing-song-id
-                                          :db.player/playing-song-progress]))
+                                          :db.player-status/playing-song-progress
+                                          :db.player-status/reported-play]))
 
 (s/def :db.ui/selected-tab integer?)
 (s/def :db.ui.edit-song-dialog/title string?)
@@ -74,8 +76,8 @@
 (def app-db {:player-status {:paused? true
                              :collapsed? true}
              :ui {:selected-tab 0}
-             :hot-songs-ids #{}
-             :favourites-songs-ids #{}
-             :user-uploaded-songs-ids #{}
+             :hot-songs-ids []
+             :favourites-songs-ids []
+             :user-uploaded-songs-ids []
              :all-artists #{}
              :songs #{}})

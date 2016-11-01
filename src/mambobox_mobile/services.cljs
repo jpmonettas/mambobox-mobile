@@ -87,4 +87,9 @@
   (merge http-fxs-commons
          {:method :post
           :uri (str constants/server-url "/song/album/search?device-id=" device-id "&q="q)}))
+
+(defn track-song-play-http-fx [device-id song-id]
+  (merge http-fxs-commons
+         {:method :put
+          :uri (str constants/server-url "/song/" song-id "/track-play?device-id=" device-id)}))
                                  

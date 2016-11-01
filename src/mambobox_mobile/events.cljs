@@ -177,7 +177,9 @@
 (defn play-song [db song-id]
   (-> db
       (assoc-in [:player-status :playing-song-id] song-id)
-      (assoc-in [:player-status :paused?] false)))
+      (assoc-in [:player-status :paused?] false)
+      (assoc-in [:player-status :reported-play] false)
+      (assoc-in [:player-status :playing-song-progress] 0)))
 
 (reg-event-db
  :play-song
@@ -190,21 +192,34 @@
  [validate-spec-mw debug]
  (fn [db [_ duration]]
    (-> db
-       (assoc-in [:player-status :playing-song-duration] duration)
-       (assoc-in [:player-status :playing-song-progress] 0))))
+       (assoc-in [:player-status :playing-song-duration] duration))))
 
 (reg-event-db
  :playing-song-finished
  [validate-spec-mw debug]
  (fn [db [_ _]]
-   (-> db)))
-
-(reg-event-db
- :playing-song-progress-report
- []
- (fn [db [_ progress]]
    (-> db
-       (assoc-in [:player-status :playing-song-progress] progress))))
+       (assoc-in [:player-status :paused?] true)
+       (assoc-in [:player-status :reported-play] false)
+       (assoc-in [:player-status :playing-song-progress] 0))))
+
+(reg-event-fx
+ :playing-song-progress-report
+ [(inject-cofx :device-info)]
+ (fn [{:keys [db device-info]} [_ progress]]
+   (let [played-percentage (* (/ (-> db :player-status :playing-song-progress)
+                                 (-> db :player-status :playing-song-duration))
+                              100)]
+     (cond-> {:db (-> db
+                       (assoc-in [:player-status :playing-song-progress] progress))}
+           
+       (and (> played-percentage 40)
+            (not (-> db :player-status :reported-play)))
+       (->
+        (assoc :http-xhrio (assoc (services/track-song-play-http-fx (-> device-info :uniq-id)
+                                                                    (-> db :player-status :playing-song-id))
+                                  :on-failure [:error]))
+        (assoc-in [:db :player-status :reported-play] true))))))
 
 (reg-event-db
  :player-progress-sliding
