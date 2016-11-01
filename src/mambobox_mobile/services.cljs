@@ -59,4 +59,32 @@
   (merge http-fxs-commons
          {:method :post
           :uri (str constants/server-url "/song/" song-id "/get?device-id=" device-id)}))
+
+(defn update-song-name-http-fx [device-id song-id new-song-name]
+  (merge http-fxs-commons
+         {:method :put
+          :uri (str constants/server-url "/song/" song-id "/name?device-id=" device-id)
+          :params {:new-song-name new-song-name}}))
+
+(defn update-song-artist-http-fx [device-id song-id new-artist-name]
+  (merge http-fxs-commons
+         {:method :put
+          :uri (str constants/server-url "/song/" song-id "/artist?device-id=" device-id)
+          :params {:new-artist-name new-artist-name}}))
+
+(defn update-song-album-http-fx [device-id song-id new-album-name]
+  (merge http-fxs-commons
+         {:method :put
+          :uri (str constants/server-url "/song/" song-id "/album?device-id=" device-id)
+          :params {:new-album-name new-album-name}}))
+
+(defn search-artists-http-fx [device-id q]
+  (merge http-fxs-commons
+         {:method :post
+          :uri (str constants/server-url "/song/artist/search?device-id=" device-id "&q="q)}))
+
+(defn search-album-http-fx [device-id q]
+  (merge http-fxs-commons
+         {:method :post
+          :uri (str constants/server-url "/song/album/search?device-id=" device-id "&q="q)}))
                                  

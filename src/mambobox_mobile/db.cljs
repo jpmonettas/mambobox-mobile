@@ -15,7 +15,17 @@
                                           :db.player/playing-song-progress]))
 
 (s/def :db.ui/selected-tab integer?)
-(s/def :db/ui (s/keys :opt-un [:db.ui/selected-tab]))
+(s/def :db.ui.edit-song-dialog/title string?)
+(s/def :db.ui.edit-song-dialog/compl-items (s/coll-of string?))
+(s/def :db.ui.edit-song-dialog/compl-dispatch (s/nilable keyword?))
+(s/def :db.ui.edit-song-dialog/save-dispatch keyword?)
+(s/def :db.ui/edit-song-dialog (s/keys :req-un [:db/id
+                                                :db.ui.edit-song-dialog/title
+                                                :db.ui.edit-song-dialog/compl-items
+                                                :db.ui.edit-song-dialog/compl-dispatch
+                                                :db.ui.edit-song-dialog/save-dispatch]))
+(s/def :db/ui (s/keys :opt-un [:db.ui/selected-tab
+                               :db.ui/edit-song-dialog]))
 
 (s/def :db/hot-songs-ids (s/coll-of :db/id))
 (s/def :db/user-uploaded-songs-ids (s/coll-of :db/id))

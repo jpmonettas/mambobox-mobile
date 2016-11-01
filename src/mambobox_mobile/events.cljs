@@ -84,6 +84,7 @@
  [debug]
  (fn [cofx [_ _]]
    (cond
+     (-> cofx :db :ui :edit-song-dialog) {:db (update (:db cofx) :ui dissoc :edit-song-dialog)}
      (not (-> cofx :db :player-status :collapsed?)) {:dispatch [:toggle-player-collapsed]}
      (-> cofx :db :selected-artist :selected-album) {:db (update (:db cofx) :selected-artist dissoc :selected-album)}
      (-> cofx :db :selected-artist) {:db (dissoc (:db cofx) :selected-artist)}
@@ -231,12 +232,6 @@
 ;; Song edition ;;
 ;;;;;;;;;;;;;;;;;;
 
-(reg-event-db
- :edit-song-attr
- [validate-spec-mw debug]
- (fn [db [_ song-id song-attr-key new-val]]
-   db))
-
 (reg-event-fx
  :add-tag-to-song
  [debug (inject-cofx :device-info)]
@@ -256,6 +251,73 @@
                                       updated-song
                                       s))
                                   songs))))))
+(reg-event-db
+ :close-edit-song-dialog
+ [validate-spec-mw debug]
+ (fn [db _]
+   (update db :ui dissoc :edit-song-dialog)))
+
+(reg-event-db
+ :open-edit-song-dialog
+ [validate-spec-mw debug]
+ (fn [db [_ song-id title compl-dispatch save-dispatch]]
+   (assoc-in db [:ui :edit-song-dialog] {:id song-id
+                                         :title title
+                                         :compl-items []
+                                         :compl-dispatch compl-dispatch
+                                         :save-dispatch save-dispatch})))
+
+(reg-event-fx
+ :update-song-name
+ [debug (inject-cofx :device-info)]
+ (fn [cofxs [_ song-id new-name]]
+   {:http-xhrio (assoc (services/update-song-name-http-fx (-> cofxs :device-info :uniq-id) song-id new-name)
+                       :on-failure [:error]
+                       :on-success [:song-updated])
+    :dispatch [:close-edit-song-dialog]}))
+
+(reg-event-fx
+ :update-artist-name
+ [debug (inject-cofx :device-info)]
+ (fn [cofxs [_ song-id new-name]]
+   {:http-xhrio (assoc (services/update-song-artist-http-fx (-> cofxs :device-info :uniq-id) song-id new-name)
+                       :on-failure [:error]
+                       :on-success [:song-updated])
+    :dispatch [:close-edit-song-dialog]}))
+
+(reg-event-fx
+ :update-album-name
+ [debug (inject-cofx :device-info)] 
+ (fn [cofxs [_ song-id new-name]]
+   {:http-xhrio (assoc (services/update-song-album-http-fx (-> cofxs :device-info :uniq-id) song-id new-name)
+                       :on-failure [:error]
+                       :on-success [:song-updated])
+    :dispatch [:close-edit-song-dialog]}))
+
+(reg-event-fx
+ :re-complete-artist-name
+ [debug (inject-cofx :device-info)]
+ (fn [cofxs [_ q]]
+   {:http-xhrio (assoc (services/search-artists-http-fx (-> cofxs :device-info :uniq-id) q)
+                       :on-failure [:error]
+                       :on-success [:complete-name-results])}))
+
+(reg-event-fx
+ :re-complete-album-name
+ [debug (inject-cofx :device-info)]
+ (fn [cofxs [_ q]]
+   {:http-xhrio (assoc (services/search-artists-http-fx (-> cofxs :device-info :uniq-id) q)
+                       :on-failure [:error]
+                       :on-success [:complete-name-results])}))
+
+(reg-event-db
+ :complete-name-results
+ [debug validate-spec-mw]
+ (fn [db [_ results]]
+   (assoc-in db [:ui :edit-song-dialog :compl-items] results)))
+
+
+
 
 ;;;;;;;;;;;;;;;;
 ;; Artist tab ;;
@@ -371,3 +433,5 @@
    (-> db
        (update :songs conj song)
        (play-song (:db/id song)))))
+
+

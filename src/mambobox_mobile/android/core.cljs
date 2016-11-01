@@ -16,6 +16,7 @@
 (def app-registry (.-AppRegistry ReactNative))
 (def text (r/adapt-react-class (.-Text ReactNative)))
 (def view (r/adapt-react-class (.-View ReactNative)))
+(def modal (r/adapt-react-class (.-Modal ReactNative)))
 (def scroll-view (r/adapt-react-class (.-ScrollView ReactNative)))
 (def slider (r/adapt-react-class (.-Slider ReactNative)))
 (def list-view (r/adapt-react-class (.-ListView ReactNative)))
@@ -57,7 +58,7 @@
 (defn alert [title]
   (.alert (.-Alert ReactNative) title))
 
-(defn show-edit-song-dialog [title song-attr-key song]
+#_(defn show-edit-song-dialog [title song-attr-key song]
   (let [d (DialogAndroid.)]
     (.set d #js{:title title
                 :positiveText "Save"
@@ -66,6 +67,46 @@
                            :allowEmptyInput false
                            :callback #(dispatch [:edit-song-attr (:db/id song) song-attr-key %])}})
     (.show d)))
+
+(defn edit-song-artist-album-dialog []
+  (let [edit-song-dialog-subs (subscribe [:edit-song-dialog])
+        input-val-atom (r/atom "")]
+    (fn []
+      (let [{:keys [title compl-items save-dispatch compl-dispatch id]} @edit-song-dialog-subs]
+        [view {:style {:position :absolute
+                       :padding 15
+                       :top 5
+                       :bottom 5
+                       :elevation 100
+                       :left 5
+                       :right 5
+                       :background-color :white
+                       :flex 1}}
+         [text {:style {:font-weight :bold}} title]
+         [text-input {:style {:flex 0.1}
+                      :underline-color-android :grey
+                      :on-change-text #(do (reset! input-val-atom %)
+                                           (when (and compl-dispatch
+                                                      (pos? (count @input-val-atom)))
+                                             (dispatch [compl-dispatch @input-val-atom])))}]
+         [scroll-view {:style {:flex 0.8}}
+          (for [ci compl-items]
+            ^{:key ci} [touchable-opacity {:on-press #(dispatch [save-dispatch id ci])}
+                        [view {:style {:padding 15
+                                       :border-width 1
+                                       :margin 2
+                                       :border-color "rgba(0,0,0,0.1)"}}
+                         [text {:style {:font-size 17}}
+                          (gen-utils/denormalize-entity-name-string ci)]]])]
+         [view {:flex-direction :row
+                       :flex 0.1
+                       :justify-content :space-around}
+          [touchable-opacity {:on-press #(if (pos? (count @input-val-atom))
+                                           (dispatch [save-dispatch id @input-val-atom])
+                                           (dispatch [:error "Name needed"]))}
+           [text "Save"]]
+          [touchable-opacity {:on-press #(dispatch [:close-edit-song-dialog])}
+           [text "Cancel"]]]])))) 
 
 (defn show-tag-select-dialog [song]
   (let [d (DialogAndroid.)]
@@ -118,8 +159,10 @@
             :size 20}]
      [view {:style {:flex 0.8}}
       [text {:style {:font-weight :bold
-                     :font-size 17}} (-> s :mb.song/name gen-utils/denormalize-entity-name-string)]
-      [text {} (-> s :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]
+                     :font-size 17}
+             :number-of-lines 1} (-> s :mb.song/name gen-utils/denormalize-entity-name-string)]
+      [text {:number-of-lines 1}
+       (-> s :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]
       [view {:style {:flex-direction :row
                      :align-items :center
                      :height 25}}
@@ -366,17 +409,26 @@
      [view {:style {:height 100
                     :margin-bottom 30
                     :justify-content :space-between}}
-      [touchable-opacity {:on-press #(show-edit-song-dialog "New song name" :mb.song/name song)}
+      [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) "New song name" nil :update-song-name])}
        [view {:style card-style}
-        [text {:style text-style} (gen-utils/denormalize-entity-name-string (:mb.song/name song))]
+        [view {:flex 1}
+         [text {:style text-style
+                :number-of-lines 1}
+          (gen-utils/denormalize-entity-name-string (:mb.song/name song))]]
         [icon {:name "pencil" :size 17}]]]
-      [touchable-opacity {:on-press #(show-edit-song-dialog "New artist name" :mb.artist/name song)}
+      [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) "New artist name" :re-complete-artist-name :update-artist-name])}
        [view {:style card-style}
-        [text {:style text-style} (-> song :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]
+        [view {:flex 1}
+         [text {:style text-style
+                :number-of-lines 1}
+          (-> song :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]
         [icon {:name "pencil" :size 17}]]]
-      [touchable-opacity {:on-press #(show-edit-song-dialog "New album name" :mb.album/name song)}
+      [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) "New album name" :re-complete-album-name :update-album-name])}
        [view {:style card-style}
-        [text {:style text-style} (-> song :album :mb.album/name gen-utils/denormalize-entity-name-string)]
+        [view {:flex 1}
+         [text {:style text-style
+                :number-of-lines 1}
+          (-> song :album :mb.album/name gen-utils/denormalize-entity-name-string)]]
         [icon {:name "pencil" :size 17}]]]]
      [view {:style {:flex-direction :row
                     :height 100
@@ -426,11 +478,13 @@
                     :margin 5
                     :background-color "rgba(0,0,0,0.1)"} 
             :size 20}]
-     [view {}
+     [view {:style {:width 230}}
       [text {:style {:font-weight :bold
-                     :font-size 17}}
+                     :font-size 17}
+             :number-of-lines 1}
        (-> playing-song :mb.song/name gen-utils/denormalize-entity-name-string)]
-      [text {} (-> playing-song :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]]]
+      [text {:number-of-lines 1}
+       (-> playing-song :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]]]
    [view {:style {:margin 10 :flex-direction :row}}
     [touchable-opacity {:on-press #(dispatch [:toggle-play])}
      [icon {:name (if paused? "play" "pause")
@@ -460,7 +514,8 @@
 (defn app-root []
   (let [selected-tab (subscribe [:selected-tab])
         player-status (subscribe [:player-status])
-        searching (subscribe [:searching])]
+        searching (subscribe [:searching])
+        edit-song-dialog (subscribe [:edit-song-dialog])]
     (fn []
       [view {:style {:flex 1}}
        (if @searching
@@ -485,7 +540,9 @@
            [view {:tab-label "Artists"
                   :style {:flex 1}} [all-artists-tab]]]])
        (when (:playing-song-id @player-status)
-         [player])])))
+         [player])
+       (when @edit-song-dialog
+         [edit-song-artist-album-dialog])])))
 
 
 

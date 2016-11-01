@@ -115,3 +115,10 @@
  :searching
  (fn [db _]
    (:searching db)))
+
+(reg-sub
+ :edit-song-dialog
+ (fn [db _]
+   (:edit-song-dialog (:ui db))))
+
+
