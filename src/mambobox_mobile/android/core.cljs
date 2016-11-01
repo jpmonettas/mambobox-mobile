@@ -35,6 +35,7 @@
 
 (def tags {"chacha" "#ff0000"
            "mambo" "#9303a7"
+           "cubana" "#e5399e"
            "latin-jazz" "#993366"
            "guaracha" "#64a8d1"
            "salsa dura" "#2219b2"

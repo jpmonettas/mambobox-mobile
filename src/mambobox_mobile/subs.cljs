@@ -37,9 +37,9 @@
    [(subscribe [:songs])
     (subscribe [:hot-songs-ids])])
  (fn [[songs h-ids] _]
-   (filter (fn [s]
-             (contains? (into #{} h-ids) (:db/id s)))
-           songs)))
+   (let [search-song (fn [id]
+                       (first (filter #(= (:db/id %) id) songs)))]
+    (map search-song h-ids))))
 
 (reg-sub
  :user-uploaded-songs-ids

@@ -259,13 +259,16 @@
  :song-updated
  [validate-spec-mw debug]
  (fn [db [_ updated-song]]
-   (update db :songs (fn [songs]
-                       (into #{}
-                             (map (fn [s]
-                                    (if (= (:db/id s) (:db/id updated-song))
-                                      updated-song
-                                      s))
-                                  songs))))))
+   (-> db
+       (update :songs (fn [songs]
+                        (into #{}
+                              (map (fn [s]
+                                     (if (= (:db/id s) (:db/id updated-song))
+                                       updated-song
+                                       s))
+                                   songs))))
+       (update :all-artists conj (:artist updated-song)))))
+
 (reg-event-db
  :close-edit-song-dialog
  [validate-spec-mw debug]
