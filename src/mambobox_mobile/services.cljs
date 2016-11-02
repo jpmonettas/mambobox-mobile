@@ -40,6 +40,11 @@
          {:method :post
           :uri (str constants/server-url "/song/" song-id "/tags/" tag "?device-id=" device-id)}))
 
+(defn untag-song-http-fx [device-id song-id tag]
+  (merge http-fxs-commons
+         {:method :delete
+          :uri (str constants/server-url "/song/" song-id "/tags/" tag "?device-id=" device-id)}))
+
 (defn set-song-as-favourite-http-fx [device-id song-id]
   (merge http-fxs-commons
          {:method :put

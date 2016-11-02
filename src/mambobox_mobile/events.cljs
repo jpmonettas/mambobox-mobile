@@ -255,6 +255,13 @@
    {:http-xhrio (assoc (services/tag-song-http-fx (-> cofxs :device-info :uniq-id) song-id tag)
                        :on-failure [:error]
                        :on-success [:song-updated])}))
+(reg-event-fx
+ :remove-tag-from-song
+ [debug (inject-cofx :device-info)]
+ (fn [cofxs [_ song-id tag]]
+   {:http-xhrio (assoc (services/untag-song-http-fx (-> cofxs :device-info :uniq-id) song-id tag)
+                       :on-failure [:error]
+                       :on-success [:song-updated])}))
 
 (reg-event-db
  :song-updated

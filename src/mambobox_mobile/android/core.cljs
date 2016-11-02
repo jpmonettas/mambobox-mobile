@@ -436,11 +436,12 @@
                     :justify-content :center
                     :align-items :center}}
       (for [tag (:mb.song/tags song)]
-        [view {:key tag
-               :style {:margin 5
-                       :padding 5
-                       :background-color (get tags tag)}}
-         [text {:style {:color :white}} tag]])
+        [touchable-opacity {:on-long-press #(dispatch [:remove-tag-from-song (:db/id song) tag])}
+         [view {:key tag
+                :style {:margin 5
+                        :padding 5
+                        :background-color (get tags tag)}}
+          [text {:style {:color :white}} tag]]])
       [touchable-opacity {:on-press #(show-tag-select-dialog song)}
        [icon {:name "tags" :size 35}]]]]))
 
