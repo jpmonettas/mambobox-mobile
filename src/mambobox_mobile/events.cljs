@@ -111,17 +111,16 @@
  (fn [db _]
    db))
 
+
+
 (reg-event-fx
  :song-for-upload-selected
  [validate-spec-mw debug (inject-cofx :device-info)]
  (fn [cofx [_ song]]
    (let [not-id (rand-int 10000)]
-     ;; TODO For some reason if we call this two fxs the notification
-     ;; only gets created after the upload completes
-     {
-      ;; :create-sys-notification {:id not-id
-      ;;                           :subject "Uploading to mambobox"
-      ;;                           :message (:displayName song)}
+     {:create-sys-notification {:id not-id
+                                :subject "Uploading to mambobox"
+                                :message (:displayName song)}
       :upload-song {:song-path (:path song)
                     :file-name (:displayName song)
                     :device-id (-> cofx :device-info :uniq-id)} 
@@ -130,6 +129,11 @@
               (update :uploading assoc (:path song) {:name (:displayName song)
                                                      :notification-id not-id}))})))
 
+(reg-event-fx
+ :upload-progress-updated
+ [debug]
+ (fn [cofx [_ progress file-path]]
+   {}))
 
 (reg-event-fx
  :file-uploaded
@@ -141,8 +145,7 @@
              (update :songs conj song)
              (update :user-uploaded-songs-ids conj (:db/id song))
              (update :all-artists conj (:artist song)))
-     ;; TODO fix notification stuff
-     ;; :remove-sys-notification not-id
+     :remove-sys-notification not-id
      :toast (str "Uploaded " (:mb.song/name song))})))
 
 (reg-event-fx
@@ -150,8 +153,6 @@
  [validate-spec-mw debug]
  (fn [cofx [_ path error]]
    (let [not-id (get-in (:db cofx) [:uploading path :notification-id])]
-     ;; If the error happens too quick, we aren't being able to remove the notification
-     ;; looks like it wasn't created yet
     {:db (-> (:db cofx)
              (update :uploading dissoc path))
      :remove-sys-notification not-id

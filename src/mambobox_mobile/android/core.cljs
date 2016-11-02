@@ -551,7 +551,9 @@
   (dispatch-sync [:initialize-app])
   (set! (.-disableYellowBox js/console) true)
   (.registerComponent app-registry "MamboboxMobile" #(r/reactify-component app-root))
-  (.addListener device-event-emitter "uploadProgress" (fn [e] (.log js/console e)))
+  (.addListener device-event-emitter "uploadProgress" (fn [e] (dispatch [:upload-progress-updated
+                                                                         (.-progress e)
+                                                                         (.-filePath e)])))
   (.addEventListener back-android "hardwareBackPress" (fn []
                                                         (dispatch [:back])
                                                         true)))
