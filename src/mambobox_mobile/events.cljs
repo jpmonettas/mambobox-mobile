@@ -38,13 +38,21 @@
 ;;;;;;;;;;;;;;;;;;;;
 
 (reg-event-fx
+ :device-register-error
+ []
+ (fn [_ [_ {:keys [status] :as error}]]
+   ;; if the device is already registered don't show any errors
+   (when (not= status 409)
+     {:dispatch [:error error]})))
+
+(reg-event-fx
   :initialize-app
   [validate-spec-mw debug (inject-cofx :device-info)]
   (fn [cofxs _]
     (let [{:keys [uniq-id locale country]} (:device-info cofxs)]
      {:db app-db
       :http-xhrio (assoc (services/register-device-http-fx uniq-id locale country)
-                         :on-failure [:error]
+                         :on-failure [:device-register-error]
                          :on-success [:initialize-success])
       ;; TODO Remove this hack, it's only until we call register if it wasn't registered
       :dispatch [:initialize-success]})))
