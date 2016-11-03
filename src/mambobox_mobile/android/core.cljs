@@ -241,14 +241,16 @@
                          :enableEmptySections true}]]
             
             ;; No selected album, only artist so show albums
-            [view
-             [text {:style {:font-size 17
-                            :background-color "#9303a7"
-                            :color :white
-                            :margin 10
-                            :padding 5
-                            :align-self :center}}
-              (gen-utils/denormalize-entity-name-string (:mb.artist/name s-artist))]
+            [view {}
+             [view {:style {:flex-direction :row
+                            :justify-content :center} }
+              [text {:style {:font-size 17
+                             :background-color "#9303a7"
+                             :color :white
+                             :margin 10
+                             :padding-left 10
+                             :padding-right 10}}
+               (gen-utils/denormalize-entity-name-string (:mb.artist/name s-artist))]]
              [list-view {:dataSource (build-list-view-datasource (apply array (:artist-albums s-artist)))
                          :renderRow (comp r/as-element album)
                          ;; Takes out a warning, will be deprecated soon
@@ -284,13 +286,17 @@
       (if-let [st @selected-tag]
         ;; show tag songs
         [view {:style {:flex 1}}
-         [text {:style {:font-size 17
-                        :background-color "#9303a7"
-                        :color :white
-                        :margin 10
-                        :padding 5
-                        :align-self :center}}
-          (:tag st)]
+         [view {:style {:flex-direction :row
+                        :justify-content :center}}
+          [text {:style {:font-size 15
+                         :background-color "#9303a7"
+                         :color :white
+                         :margin 10
+                         :padding-left 10
+                         :padding-right 10
+                         :self-align :center
+                         }}
+           (:tag st)]]
          (if (pos? (count (:songs st)))
           [list-view {:dataSource (build-list-view-datasource (apply array (:songs st)))
                       :renderRow (comp r/as-element song)
@@ -332,7 +338,7 @@
     (fn []
       (let [songs @searching]
        [view {:style {:flex 0.8}}
-        [view { :border-width 1
+        [view {:border-width 1
                :margin-bottom 10
                :border-color "rgba(0,0,0,0.1)"
                :background-color "#9303a7"
@@ -340,26 +346,23 @@
                :padding 10}
          [view {:background-color :white
                 :flex-direction :row
-                :justify-content :space-between
-                :height 40
-                :border-radius 15
-                :overflow :hidden}
+                :flex 1
+                :height 40}
           [icon {:name "search"
                  :style {:padding 5
-                         :margin 5
+                         :flex 0.1
                          :background-color :white}
                  :size 20}]
           [text-input {:placeholder (t [:music/search "Buscar musica..."])
                        :placeholder-text-color :grey
-                       
-                       :style {:width 250}
+                       :style {:flex 0.8}
                        :underline-color-android :grey
                        :on-change-text #(do (reset! query-text-atom %)
                                             (dispatch [:re-search @query-text-atom]))}]
-          [touchable-opacity {:on-press #(dispatch [:close-search])}
+          [touchable-opacity {:on-press #(dispatch [:close-search])
+                              :style {:flex 0.1}}
            [icon {:name "times"
                   :style {:padding 5
-                          :margin 5
                           :background-color :white}
                   :size 20}]]]]
         [view {}
@@ -468,25 +471,28 @@
                  :flex 0.2
                  :justify-content :space-between
                  :align-items :center}}
-   [touchable-opacity {:on-press #(dispatch [:toggle-player-collapsed])}
-    [view {:flex-direction :row}
-     [icon {:name "headphones"
-            :style {:padding 10
-                    :margin 5
-                    :background-color "rgba(0,0,0,0.1)"} 
-            :size 20}]
-     [view {:style {:width 230}}
-      [text {:style {:font-weight :bold
-                     :font-size 17}
-             :number-of-lines 1}
-       (-> playing-song :mb.song/name gen-utils/denormalize-entity-name-string)]
-      [text {:number-of-lines 1}
-       (-> playing-song :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]]]
-   [view {:style {:margin 10 :flex-direction :row}}
-    [touchable-opacity {:on-press #(dispatch [:toggle-play])}
-     [icon {:name (if paused? "play" "pause")
-            :size 25
-            :style {:margin 5}}]]]])
+   [view {:style {:flex-direction :row
+                  :flex 1}}
+    [touchable-opacity {:on-press #(dispatch [:toggle-player-collapsed])
+                        :style {:flex 0.9}}
+     [view {:style {:flex-direction :row}}
+      [icon {:name "headphones"
+             :style {:padding 10
+                     :margin 5
+                     :background-color "rgba(0,0,0,0.1)"} 
+             :size 20}]
+      [view {}
+       [text {:style {:font-weight :bold
+                      :font-size 17}
+              :number-of-lines 1}
+        (-> playing-song :mb.song/name gen-utils/denormalize-entity-name-string)]
+       [text {:number-of-lines 1}
+        (-> playing-song :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]]]
+    [view {:style {:margin 10 :flex 0.1 :flex-direction :row}}
+     [touchable-opacity {:on-press #(dispatch [:toggle-play])}
+      [icon {:name (if paused? "play" "pause")
+             :size 25
+             :style {:margin 5}}]]]]])
 
 (defn player []
   (let [player-status (subscribe [:player-status])
