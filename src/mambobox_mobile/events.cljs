@@ -434,7 +434,7 @@
  (fn [{:keys [db] :as cofxs} _]
    (let [minutes-since-last-dump (time/in-minutes (time/interval (-> db :catched-last-dumps :hot-songs) (time/now)))]
      (.log js/console (str  minutes-since-last-dump " since last hot-songs dump."))
-     (if (> minutes-since-last-dump 2)
+     (if (> minutes-since-last-dump 120)
        {:http-xhrio (assoc (services/load-hot-songs-http-fx (-> cofxs :device-info :uniq-id))
                            :on-failure [:error]
                            :on-success [:hot-songs-received])}
@@ -457,7 +457,7 @@
  (fn [{:keys [db] :as cofxs} _]
    (let [minutes-since-last-dump (time/in-minutes (time/interval (-> db :catched-last-dumps :artists) (time/now)))]
      (.log js/console (str  minutes-since-last-dump " since last all-artists dump."))
-     (if (> minutes-since-last-dump 2)
+     (if (> minutes-since-last-dump 120)
        {:http-xhrio (assoc (services/load-all-artists-http-fx (-> cofxs :device-info :uniq-id))
                            :on-failure [:error]
                            :on-success [:all-artists-received])}

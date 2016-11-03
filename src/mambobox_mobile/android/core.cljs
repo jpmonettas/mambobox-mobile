@@ -212,7 +212,7 @@
                   :border-width 1
                   :margin 2
                   :border-color "rgba(0,0,0,0.1)"}}
-    [text {:style {:font-size 17}}
+    [text {:style {:font-size 15}}
      (gen-utils/denormalize-entity-name-string (:mb.artist/name a))]]])
 
 (defn album [a]
@@ -221,7 +221,7 @@
                   :border-width 1
                   :margin 2
                   :border-color "rgba(0,0,0,0.1)"}}
-    [text {:style {:font-size 17}}
+    [text {:style {:font-size 15}}
      (gen-utils/denormalize-entity-name-string (:mb.album/name a))]]])
 
 (defn all-artists-tab []
@@ -234,7 +234,7 @@
           (if (:selected-album s-artist)
             ;; All albums songs
             [view
-             [text {:style {:font-size 17
+             [text {:style {:font-size 14
                             :background-color "#9303a7"
                             :color :white
                             :margin 10
@@ -250,7 +250,7 @@
             [view {}
              [view {:style {:flex-direction :row
                             :justify-content :center} }
-              [text {:style {:font-size 17
+              [text {:style {:font-size 14
                              :background-color "#9303a7"
                              :color :white
                              :margin 10
@@ -496,7 +496,7 @@
     [view {:style {:margin 10 :flex 0.1 :flex-direction :row}}
      [touchable-opacity {:on-press #(dispatch [:toggle-play])}
       [icon {:name (if paused? "play" "pause")
-             :size 25
+             :size 20
              :style {:margin 5}}]]]]])
 
 (defn player []
