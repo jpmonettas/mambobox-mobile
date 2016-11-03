@@ -75,7 +75,7 @@
     (-> db
         (assoc :favourites-songs-ids favourites-songs-ids)
         (assoc :user-uploaded-songs-ids user-uploaded-songs-ids)
-        (assoc :hot-songs-ids hot-songs-ids)
+        (assoc :hot-songs-ids-and-scores hot-songs-ids)
         (assoc :songs (->> songs
                            (map (fn [s] [(:db/id s) s]))
                            (into {})))
@@ -422,8 +422,10 @@
  [validate-spec-mw debug]
  (fn [db [_ songs]]
    (-> db
-       (assoc :hot-songs-ids (map :db/id songs))
-       (update :songs into (map (fn [s] [(:db/id s) s]) songs))
+       (assoc :hot-songs-ids-and-scores (map (fn [[song score]]
+                                               [(:db/id song) score])
+                                             songs))
+       (update :songs into (map (fn [[song score]] [(:db/id song) song]) songs))
        (assoc-in [:catched-last-dumps :hot-songs] (time/now)))))
 
 (reg-event-fx

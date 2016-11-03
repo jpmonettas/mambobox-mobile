@@ -92,7 +92,7 @@ public class PickerModule extends ReactContextBaseJavaModule implements Activity
 
 	// You can get the result here
 	@Override
-	public void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
+	public void onActivityResult(Activity activity,final int requestCode,  int resultCode,  Intent intent) {
 		if (requestCode == PICKER_REQUEST) {
 			if (mPickerPromise != null) {
 				if (resultCode == Activity.RESULT_CANCELED) {
@@ -112,6 +112,7 @@ public class PickerModule extends ReactContextBaseJavaModule implements Activity
 			}
 		}
 	}
+
 
 	@Override
 	public void onNewIntent(Intent intent) {

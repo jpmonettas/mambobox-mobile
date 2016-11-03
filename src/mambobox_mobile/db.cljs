@@ -29,7 +29,7 @@
 (s/def :db/ui (s/keys :opt-un [:db.ui/selected-tab
                                :db.ui/edit-song-dialog]))
 
-(s/def :db/hot-songs-ids (s/coll-of :db/id))
+(s/def :db/hot-songs-ids-and-scores (s/coll-of (s/tuple :db/id number?)))
 (s/def :db/user-uploaded-songs-ids (s/coll-of :db/id))
 (s/def :db/favourites-songs-ids (s/coll-of :db/id))
 (s/def :db/songs (s/map-of :db/id :mb/song))
@@ -70,7 +70,7 @@
 (s/def :db/searching (s/coll-of :db.searching/song))
 (s/def ::db (s/keys :req-un [:db/player-status
                              :db/ui
-                             :db/hot-songs-ids
+                             :db/hot-songs-ids-and-scores
                              :db/favourites-songs-ids
                              :db/user-uploaded-songs-ids
                              :db/songs
@@ -85,7 +85,7 @@
 (def app-db {:player-status {:paused? true
                              :collapsed? true}
              :ui {:selected-tab 0}
-             :hot-songs-ids []
+             :hot-songs-ids-and-scores []
              :favourites-songs-ids []
              :user-uploaded-songs-ids []
              :all-artists []

@@ -10,7 +10,9 @@
             [mambobox-mobile.constants :as constants]
             [devtools.core :as dt]
             [mambobox-mobile.dict :refer [mambo-dictionary]]
-            [taoensso.tempura :as tempura :refer [tr]]))
+            [taoensso.tempura :as tempura :refer [tr]]
+            [goog.string :as gstring]
+            [goog.string.format]))
 
 (def t (partial tr {:dict mambo-dictionary} [:es]))
 
@@ -32,7 +34,7 @@
 (def touchable-highlight (r/adapt-react-class (.-TouchableHighlight ReactNative)))
 (def touchable-opacity (r/adapt-react-class (.-TouchableOpacity ReactNative)))
 (def video (r/adapt-react-class (.-default (js/require "react-native-video/Video"))))
-(def icon (r/adapt-react-class (js/require "react-native-vector-icons/FontAwesome")))
+(def icon (r/adapt-react-class (.-default (js/require "react-native-vector-icons/FontAwesome"))))
 (def scrollable-tab-view (r/adapt-react-class (js/require "react-native-scrollable-tab-view")))
 (def back-android (.-BackAndroid ReactNative))
 (def DialogAndroid (js/require "react-native-dialogs"))
@@ -148,11 +150,18 @@
                   :justify-content "space-between"}}
     [view {:flex-direction :row
            :flex 1}
-     [icon {:name "music"
-            :style {:padding 10
-                    :margin 5
-                    :background-color "rgba(0,0,0,0.1)"}
-            :size 20}]
+     (if (:score s)
+       [view {:style {:padding 10
+                       :margin 5}}
+        [icon {:name "thermometer-empty"
+               :color :red
+               :size 20}]
+        [text {:style {:color :red}} (gstring/format "%.1f" (* 10 (:score s)))]]
+       [icon {:name "music"
+              :style {:padding 10
+                      :margin 5
+                      :background-color "rgba(0,0,0,0.1)"}
+              :size 20}])
      [view {:style {:flex 0.8}}
       [text {:style {:font-weight :bold
                      :font-size 17}
@@ -162,14 +171,14 @@
       [view {:style {:flex-direction :row
                      :align-items :center
                      :height 25}}
-      (for [tag (:mb.song/tags s)]
-        [view {:key tag
-               :style {:margin 2
-                       :border-radius 5
-                       :padding 3
-                       :background-color (get tags tag)}}
-         [text {:style {:color :white
-                        :font-size 10}} tag]])]]]
+       (for [tag (:mb.song/tags s)]
+         [view {:key tag
+                :style {:margin 2
+                        :border-radius 5
+                        :padding 3
+                        :background-color (get tags tag)}}
+          [text {:style {:color :white
+                         :font-size 10}} tag]])]]]
     [view {:flex-direction :row}
      [favourite-star-icon (:favourite? s) (:db/id s)]
      [icon {:name "ellipsis-v"
@@ -468,7 +477,6 @@
 
 (defn collapsed-player [playing-song paused?]
   [view {:style {:flex-direction :row
-                 :flex 0.2
                  :justify-content :space-between
                  :align-items :center}}
    [view {:style {:flex-direction :row
@@ -502,7 +510,8 @@
             pl-song @playing-song]
         [view {:style {:elevation 10
                        :padding 10
-                       :background-color :white}}
+                       :background-color :white
+                       }}
         (if (:collapsed? pl-stat)
           [collapsed-player pl-song (:paused? pl-stat)]
           [expanded-player])
@@ -523,7 +532,7 @@
       [view {:style {:flex 1}}
        (if @searching
          [search]
-         [view {:style {:flex 1}}
+         [view {:style {:flex 0.9}}
           [header]
           [scrollable-tab-view {:initial-page @selected-tab
                                 :page @selected-tab
@@ -550,6 +559,7 @@
                   :style {:flex 1}} [user-uploaded-songs-tab]]
            [view {:tab-label (t [:music.tabs/artists "Artists"]) 
                   :style {:flex 1}} [all-artists-tab]]]])
+       
        (when (:playing-song-id @player-status)
          [player])
        (when @edit-song-dialog

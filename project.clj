@@ -5,8 +5,8 @@
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/clojure "1.9.0-alpha11"]
-                 [org.clojure/clojurescript "1.9.227"]
-                 [reagent "0.6.0-rc" :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server]]
+                 [org.clojure/clojurescript "1.9.293"]
+                 [reagent "0.6.0" :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server]]
                  [re-frame "0.8.0"]
                  [funcool/promesa "1.5.0"]
                  [day8.re-frame/http-fx "0.1.2"]
@@ -16,13 +16,13 @@
                  [com.andrewmcveigh/cljs-time "0.4.0"]]
   
   :plugins [[lein-cljsbuild "1.1.4"]
-            [lein-figwheel "0.5.0-6"]]
+            [lein-figwheel "0.5.8"]]
   :clean-targets ["target/" "index.ios.js" "index.android.js"]
   :aliases {"prod-build" ^{:doc "Recompile code with prod profile."}
             ["do" "clean"
              ["with-profile" "prod" "cljsbuild" "once" "ios"]
              ["with-profile" "prod" "cljsbuild" "once" "android"]]}
-  :profiles {:dev {:dependencies [[figwheel-sidecar "0.5.0-6"]
+  :profiles {:dev {:dependencies [[figwheel-sidecar "0.5.8"]
                                   [com.cemerick/piggieback "0.2.1"]
                                   [binaryage/devtools "0.8.1"]]
                    :source-paths ["src" "mambobox-core/src/cljc" "env/dev"]

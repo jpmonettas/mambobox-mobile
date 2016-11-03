@@ -141,7 +141,6 @@ dependencies {
     
     compile project(':react-native-video')
     compile project(':react-native-fileupload')
-    compile project(':react-native-system-notification') 
 }
 
 // Run this once to be able to run the application with BUCK
