@@ -60,6 +60,13 @@
                                         :mb.song/name
                                         :mb.artist/name]))
 
+
+(s/def :db.catched-last-dumps/artists any?)
+(s/def :db.catched-last-dumps/hot-songs any?)
+
+(s/def :db/catched-last-dumps (s/keys :opt-un [:db.catched-last-dumps/artists
+                                                :db.catched-last-dumps/hot-songs]))
+
 (s/def :db/searching (s/coll-of :db.searching/song))
 (s/def ::db (s/keys :req-un [:db/player-status
                              :db/ui
@@ -71,7 +78,8 @@
                     :opt-un [:db/uploading
                              :db/selected-artist
                              :db/selected-tag
-                             :db/searching]))
+                             :db/searching
+                             :db/catched-last-dumps]))
 
 ;; initial state of app-db
 (def app-db {:player-status {:paused? true

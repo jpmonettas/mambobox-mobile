@@ -5,7 +5,8 @@
     [mambobox-mobile.db :as db :refer [app-db]]
     [mambobox-mobile.fxs]
     [day8.re-frame.http-fx]
-    [mambobox-mobile.services :as services]))
+    [mambobox-mobile.services :as services]
+    [cljs-time.core :as time]))
 
 ;; -- Middleware ------------------------------------------------------------
 ;;
@@ -70,14 +71,17 @@
  [validate-spec-mw debug]
  (fn [db [_ {:keys [songs favourites-songs-ids hot-songs-ids user-uploaded-songs-ids all-artists] :as data}]]
    (.log js/console "Got initial dump ! " data)
-   (-> db
-       (assoc :favourites-songs-ids favourites-songs-ids)
-       (assoc :user-uploaded-songs-ids user-uploaded-songs-ids)
-       (assoc :hot-songs-ids hot-songs-ids)
-       (assoc :songs (->> songs
-                          (map (fn [s] [(:db/id s) s]))
-                          (into {})))
-       (assoc :all-artists all-artists))))
+   (let [right-now (time/now)]
+    (-> db
+        (assoc :favourites-songs-ids favourites-songs-ids)
+        (assoc :user-uploaded-songs-ids user-uploaded-songs-ids)
+        (assoc :hot-songs-ids hot-songs-ids)
+        (assoc :songs (->> songs
+                           (map (fn [s] [(:db/id s) s]))
+                           (into {})))
+        (assoc :all-artists all-artists)
+        (assoc :catched-last-dumps {:artists right-now
+                                    :hot-songs right-now})))))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; General handlers ;;
@@ -391,15 +395,57 @@
     ;; TODO replace page in las argument for paginaiton
     :http-xhrio (assoc (services/load-tag-songs-http-fx (-> cofxs :device-info :uniq-id) tag 0)
                        :on-failure [:error]
-                       :on-success [:tag-songs])}))
+                       :on-success [:tag-songs-received])}))
 
 (reg-event-db
- :tag-songs
+ :tag-songs-received
  [validate-spec-mw debug]
  (fn [db [_ songs]]
    (-> db
        (update :songs into (map (fn [s] [(:db/id s) s]) songs))
        (assoc-in [:selected-tag :selected-tag-songs-ids] (into #{} (map :db/id songs))))))
+
+(reg-event-fx
+ :reload-hot-songs-if-needed
+ [debug (inject-cofx :device-info)]
+ (fn [{:keys [db] :as cofxs} _]
+   (let [minutes-since-last-dump (time/in-minutes (time/interval (-> db :catched-last-dumps :hot-songs) (time/now)))]
+     (.log js/console (str  minutes-since-last-dump " since last hot-songs dump."))
+     (if (> minutes-since-last-dump 2)
+       {:http-xhrio (assoc (services/load-hot-songs-http-fx (-> cofxs :device-info :uniq-id))
+                           :on-failure [:error]
+                           :on-success [:hot-songs-received])}
+       {}))))
+
+(reg-event-db
+ :hot-songs-received
+ [validate-spec-mw debug]
+ (fn [db [_ songs]]
+   (-> db
+       (assoc :hot-songs-ids (map :db/id songs))
+       (update :songs into (map (fn [s] [(:db/id s) s]) songs))
+       (assoc-in [:catched-last-dumps :hot-songs] (time/now)))))
+
+(reg-event-fx
+ :reload-all-artists-if-needed
+ [debug (inject-cofx :device-info)]
+ (fn [{:keys [db] :as cofxs} _]
+   (let [minutes-since-last-dump (time/in-minutes (time/interval (-> db :catched-last-dumps :artists) (time/now)))]
+     (.log js/console (str  minutes-since-last-dump " since last all-artists dump."))
+     (if (> minutes-since-last-dump 2)
+       {:http-xhrio (assoc (services/load-all-artists-http-fx (-> cofxs :device-info :uniq-id))
+                           :on-failure [:error]
+                           :on-success [:all-artists-received])}
+       {}))))
+
+(reg-event-db
+ :all-artists-received
+ [validate-spec-mw debug]
+ (fn [db [_ artists]]
+   (-> db
+       (assoc :all-artists artists)
+       (assoc-in [:catched-last-dumps :artists] (time/now)))))
+
 
 (reg-event-fx
  :add-to-favourites 

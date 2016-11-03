@@ -25,6 +25,11 @@
          {:method :post
           :uri (str constants/server-url "/song/explore-artist?device-id=" device-id "&artist-id=" artist-id)}))
 
+(defn load-all-artists-http-fx [device-id]
+  (merge http-fxs-commons
+         {:method :post
+          :uri (str constants/server-url "/song/all-artists?device-id=" device-id)}))
+
 (defn load-album-songs-http-fx [device-id album-id]
   (merge http-fxs-commons
          {:method :post
@@ -34,6 +39,11 @@
   (merge http-fxs-commons
          {:method :post
           :uri (str constants/server-url "/song/explore-tag?device-id=" device-id "&tag=" tag "&page=" page)}))
+
+(defn load-hot-songs-http-fx [device-id]
+  (merge http-fxs-commons
+         {:method :post
+          :uri (str constants/server-url "/song/hot?device-id=" device-id)}))
 
 (defn tag-song-http-fx [device-id song-id tag]
   (merge http-fxs-commons

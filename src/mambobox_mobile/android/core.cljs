@@ -527,11 +527,19 @@
           [header]
           [scrollable-tab-view {:initial-page @selected-tab
                                 :page @selected-tab
-                                :on-change-tab #(dispatch [:change-tab (.-i %)])
+                                :on-change-tab #(let [tab-idx (.-i %)]
+                                                  (dispatch [:change-tab tab-idx])
+                                                  (case tab-idx
+                                                    1 (dispatch [:reload-hot-songs-if-needed])
+                                                    4 (dispatch [:reload-all-artists-if-needed])
+                                                    nil))
                                 :tab-bar-background-color "#9303a7"
                                 :tab-bar-active-text-color :white
                                 :tab-bar-inactive-text-color :white
                                 :tab-bar-underline-style {:background-color "white"}}
+           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+           ;; ATENTION ADDING, REMOVING OR CHANGING TABS ORDER CAN BREAK THE on-change-tab CALL ;;
+           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
            [view {:tab-label (t [:music.tabs/favourites "Favourites"]) 
                   :style {:flex 1}} [my-favourites-tab]]
            [view {:tab-label (t [:music.tabs/hot "Hot"])
