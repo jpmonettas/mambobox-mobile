@@ -9,7 +9,7 @@
            (if (contains? (into #{} (:favourites-songs-ids db)) (:db/id s))
              (assoc s :favourite? true)
              s))
-     (:songs db))))
+     (vals (:songs db)))))
 
 (reg-sub
   :favourites-songs-ids

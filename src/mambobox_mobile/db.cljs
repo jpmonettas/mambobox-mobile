@@ -32,12 +32,13 @@
 (s/def :db/hot-songs-ids (s/coll-of :db/id))
 (s/def :db/user-uploaded-songs-ids (s/coll-of :db/id))
 (s/def :db/favourites-songs-ids (s/coll-of :db/id))
-(s/def :db/songs (s/coll-of :mb/song))
+(s/def :db/songs (s/map-of :db/id :mb/song))
 (s/def :db/all-artists (s/coll-of :mb.song/artist))
 (s/def :db/artist-albums (s/coll-of :mb.song/album))
+(s/def :db.album/songs (s/coll-of :mb/song))
 (s/def :db/selected-album (s/keys :req [:db/id
                                         :mb.album/name]
-                                  :opt-un [:db/songs]))
+                                  :opt-un [:db.album/songs]))
 (s/def :db/selected-artist (s/keys :req [:db/id
                                          :mb.artist/name]
                                    :opt-un [:db/artist-albums
@@ -79,5 +80,5 @@
              :hot-songs-ids []
              :favourites-songs-ids []
              :user-uploaded-songs-ids []
-             :all-artists #{}
-             :songs #{}})
+             :all-artists []
+             :songs {}})

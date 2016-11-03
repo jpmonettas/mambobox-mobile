@@ -74,7 +74,9 @@
        (assoc :favourites-songs-ids favourites-songs-ids)
        (assoc :user-uploaded-songs-ids user-uploaded-songs-ids)
        (assoc :hot-songs-ids hot-songs-ids)
-       (assoc :songs songs)
+       (assoc :songs (->> songs
+                          (map (fn [s] [(:db/id s) s]))
+                          (into {})))
        (assoc :all-artists all-artists))))
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -150,7 +152,7 @@
    (let [not-id (get-in (:db cofx) [:uploading path :notification-id])]
     {:db (-> (:db cofx)
              (update :uploading dissoc path)
-             (update :songs conj song)
+             (update :songs assoc (:db/id song) song)
              (update :user-uploaded-songs-ids conj (:db/id song))
              (update :all-artists conj (:artist song)))
      :remove-sys-notification not-id
@@ -276,13 +278,7 @@
  [validate-spec-mw debug]
  (fn [db [_ updated-song]]
    (-> db
-       (update :songs (fn [songs]
-                        (into #{}
-                              (map (fn [s]
-                                     (if (= (:db/id s) (:db/id updated-song))
-                                       updated-song
-                                       s))
-                                   songs))))
+       (update :songs assoc (:db/id updated-song) updated-song)
        (update :all-artists conj (:artist updated-song)))))
 
 (reg-event-db
@@ -402,7 +398,7 @@
  [validate-spec-mw debug]
  (fn [db [_ songs]]
    (-> db
-       (update :songs into songs)
+       (update :songs into (map (fn [s] [(:db/id s) s]) songs))
        (assoc-in [:selected-tag :selected-tag-songs-ids] (into #{} (map :db/id songs))))))
 
 (reg-event-fx
@@ -465,7 +461,7 @@
  :song-for-play
  (fn [db [_ song]]
    (-> db
-       (update :songs conj song)
+       (update :songs assoc (:db/id song) song)
        (play-song (:db/id song)))))
 
 
