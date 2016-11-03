@@ -180,11 +180,7 @@
           [text {:style {:color :white
                          :font-size 10}} tag]])]]]
     [view {:flex-direction :row}
-     [favourite-star-icon (:favourite? s) (:db/id s)]
-     [icon {:name "ellipsis-v"
-            :style {:padding 10
-                    :margin 5}
-            :size 20}]]]])
+     [favourite-star-icon (:favourite? s) (:db/id s)]]]])
 
 (defn my-favourites-tab []
   (let [favourites-songs (subscribe [:favourites-songs])]
@@ -230,7 +226,8 @@
 
 (defn all-artists-tab []
   (let [all-artists (subscribe [:all-artists])
-        selected-artist (subscribe [:selected-artist])]
+        selected-artist (subscribe [:selected-artist])
+        selected-album-songs (subscribe [:selected-album-songs])]
     (fn []
       (let [s-artist @selected-artist]
         (if s-artist
@@ -244,7 +241,7 @@
                             :padding 5
                             :align-self :center}}
               (gen-utils/denormalize-entity-name-string (-> s-artist :selected-album :mb.album/name ))]
-             [list-view {:dataSource (build-list-view-datasource (apply array (-> s-artist :selected-album :songs )))
+             [list-view {:dataSource (build-list-view-datasource (apply array @selected-album-songs))
                          :renderRow (comp r/as-element song)
                          ;; Takes out a warning, will be deprecated soon
                          :enableEmptySections true}]]

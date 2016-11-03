@@ -31,18 +31,18 @@
   (fn [db _]
     (:hot-songs-ids-and-scores db)))
 
+(defn search-song [id songs] (first (filter #(= (:db/id %) id) songs)))
+
 (reg-sub
  :hot-songs
  (fn [_ _]
    [(subscribe [:songs])
     (subscribe [:hot-songs-ids-and-scores])])
  (fn [[songs h-ids] _]
-   (let [search-song-fn (fn [id]
-                          (first (filter #(= (:db/id %) id) songs)))]
-     (map (fn [[id score]]
-            (-> (search-song-fn id)
-                (assoc :score score)))
-          h-ids))))
+   (map (fn [[id score]]
+          (-> (search-song id songs)
+              (assoc :score score)))
+        h-ids)))
 
 (reg-sub
  :user-uploaded-songs-ids
@@ -66,8 +66,19 @@
 
 (reg-sub
  :selected-artist
-  (fn [db _]
-    (:selected-artist db)))
+ (fn [db _]
+   (:selected-artist db)))
+
+(reg-sub
+ :selected-album-songs
+ (fn [_ _]
+   [(subscribe [:songs])
+    (subscribe [:selected-artist])])
+ (fn [[songs selected-artist] _]
+   (let [selected-album-songs-ids (-> selected-artist :selected-album :songs-ids)]
+     (if (pos? (count selected-album-songs-ids))
+       (map #(search-song % songs) selected-album-songs-ids)
+       []))))
 
 (reg-sub
  :selected-tag

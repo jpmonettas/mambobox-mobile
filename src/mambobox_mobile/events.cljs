@@ -25,6 +25,26 @@
     (after (partial check-and-throw ::db/db))
     []))
 
+
+(reg-event-db
+ :collect-garbage
+ [debug validate-spec-mw]
+ (fn [db _]
+   (let [all-song-references-ids (into #{} (concat (map first (:hot-songs-ids-and-scores db))
+                                                   (:favourites-songs-ids db)
+                                                   (:user-uploaded-songs-ids db)
+                                                   (-> db :selected-tag :selected-tag-songs-ids)
+                                                   (-> db :selected-artist :selected-album :songs-ids)
+                                                   (list (-> db :player-status :playing-song-id))))
+         updated-db (update db :songs (fn [songs]
+                         (into {}
+                               (filter (fn [[id s]]
+                                         (contains? all-song-references-ids id)) songs))))]
+     (.log js/console "Garbage collector run, got rid of " (- (-> db :songs count)
+                                                              (-> updated-db :songs count))
+           " songs")
+     updated-db)))
+
 ;; -- Handlers --------------------------------------------------------------
 
 (reg-event-db
@@ -379,13 +399,16 @@
    {:db (assoc-in (:db cofxs) [:selected-artist :selected-album] album)
     :http-xhrio (assoc (services/load-album-songs-http-fx (-> cofxs :device-info :uniq-id) (:db/id album))
                        :on-failure [:error]
-                       :on-success [:album-songs])}))
+                       :on-success [:album-songs])
+    :dispatch [:collect-garbage]}))
 
 (reg-event-db
  :album-songs
  [validate-spec-mw debug]
  (fn [db [_ songs]]
-   (update-in db [:selected-artist :selected-album] assoc :songs songs)))
+   (-> db
+       (assoc-in [:selected-artist :selected-album :songs-ids] (map :db/id songs))
+       (update :songs into (map (fn [s] [(:db/id s) s]) songs)))))
 
 (reg-event-fx
  :load-tag-songs
