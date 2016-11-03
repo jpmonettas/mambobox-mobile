@@ -11,7 +11,8 @@
                  [funcool/promesa "1.5.0"]
                  [day8.re-frame/http-fx "0.1.2"]
                  [cljs-ajax "0.5.8"]
-                 [camel-snake-kebab "0.4.0"]]
+                 [camel-snake-kebab "0.4.0"]
+                 [com.taoensso/tempura "1.0.0-RC3"]]
   
   :plugins [[lein-cljsbuild "1.1.4"]
             [lein-figwheel "0.5.0-6"]]

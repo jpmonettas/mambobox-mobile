@@ -8,7 +8,11 @@
             [mambobox-core.core-spec]
             [mambobox-core.generic-utils :as gen-utils]
             [mambobox-mobile.constants :as constants]
-            [devtools.core :as dt]))
+            [devtools.core :as dt]
+            [mambobox-mobile.dict :refer [mambo-dictionary]]
+            [taoensso.tempura :as tempura :refer [tr]]))
+
+(def t (partial tr {:dict mambo-dictionary} [:es]))
 
 (def ReactNative (js/require "react-native"))
 (def device-event-emitter (.-DeviceEventEmitter ReactNative))
@@ -59,15 +63,6 @@
 (defn alert [title]
   (.alert (.-Alert ReactNative) title))
 
-#_(defn show-edit-song-dialog [title song-attr-key song]
-  (let [d (DialogAndroid.)]
-    (.set d #js{:title title
-                :positiveText "Save"
-                :negativeText "Cancel"
-                :input #js{:prefill (get song song-attr-key)
-                           :allowEmptyInput false
-                           :callback #(dispatch [:edit-song-attr (:db/id song) song-attr-key %])}})
-    (.show d)))
 
 (defn edit-song-artist-album-dialog []
   (let [edit-song-dialog-subs (subscribe [:edit-song-dialog])
@@ -104,16 +99,16 @@
                        :justify-content :space-around}
           [touchable-opacity {:on-press #(if (pos? (count @input-val-atom))
                                            (dispatch [save-dispatch id @input-val-atom])
-                                           (dispatch [:error "Name needed"]))}
-           [text "Save"]]
+                                           (dispatch [:error (t [:music.error/name-needed "Please add a name"])]))}
+           [text (t [:save "Save"])]]
           [touchable-opacity {:on-press #(dispatch [:close-edit-song-dialog])}
-           [text "Cancel"]]]])))) 
+           [text (t [:cancel "Cancel"])]]]])))) 
 
 (defn show-tag-select-dialog [song]
   (let [d (DialogAndroid.)]
-    (.set d #js{:title "Add tag to song"
-                :positiveText "Add"
-                :negativeText "Cancel"
+    (.set d #js{:title (t [:music.edit/add-tag-to-song "Choose a tag"])
+                :positiveText (t [:add "Add"])
+                :negativeText (t [:cancel "Cancel"])
                 :items (clj->js (keys tags))
                 :itemsCallback (fn [_ tag] (dispatch [:add-tag-to-song (:db/id song) tag]))})
     (.show d)))
@@ -301,7 +296,7 @@
                       :renderRow (comp r/as-element song)
                       ;; Takes out a warning, will be deprecated soon
                       :enableEmptySections true}]
-          [text (str "No songs under " (:tag st))])]
+          [text (str (t [:music/no-songs-under  "No songs underr "]) (:tag st))])]
         
         ;; show tags for selection
         [scroll-view 
@@ -354,7 +349,7 @@
                          :margin 5
                          :background-color :white}
                  :size 20}]
-          [text-input {:placeholder "Buscar musica..."
+          [text-input {:placeholder (t [:music/search "Buscar musica..."])
                        :placeholder-text-color :grey
                        
                        :style {:width 250}
@@ -376,9 +371,9 @@
    [tool-bar {:title "MamboBox"
               :title-color :white
               :style {:height 50}
-              :actions [{:title "Subir musica"}
-                        {:title "Preferencias"}
-                        {:title "Search" :icon search-img :show :always}]
+              :actions [{:title (t [:music.menu/upload-song "Upload music"])}
+                        {:title (t [:music.menu/preferences "Preferences"])}
+                        {:title (t [:music.menu/search "Search"]) :icon search-img :show :always}]
               
               :on-action-selected #(case %
                                      0 (dispatch [:pick-song-and-upload])
@@ -410,21 +405,21 @@
      [view {:style {:height 100
                     :margin-bottom 30
                     :justify-content :space-between}}
-      [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) "New song name" nil :update-song-name])}
+      [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) (t [:music.edit/new-song-name "New song name"]) nil :update-song-name])}
        [view {:style card-style}
         [view {:flex 1}
          [text {:style text-style
                 :number-of-lines 1}
           (gen-utils/denormalize-entity-name-string (:mb.song/name song))]]
         [icon {:name "pencil" :size 17}]]]
-      [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) "New artist name" :re-complete-artist-name :update-artist-name])}
+      [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) (t [:music.edit/new-artist-name "New artist name"]) :re-complete-artist-name :update-artist-name])}
        [view {:style card-style}
         [view {:flex 1}
          [text {:style text-style
                 :number-of-lines 1}
           (-> song :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]
         [icon {:name "pencil" :size 17}]]]
-      [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) "New album name" :re-complete-album-name :update-album-name])}
+      [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) (t [:music.edit/new-album-name "New album name"]) :re-complete-album-name :update-album-name])}
        [view {:style card-style}
         [view {:flex 1}
          [text {:style text-style
@@ -531,15 +526,15 @@
                                 :tab-bar-active-text-color :white
                                 :tab-bar-inactive-text-color :white
                                 :tab-bar-underline-style {:background-color "white"}}
-           [view {:tab-label "Favourites"
+           [view {:tab-label (t [:music.tabs/favourites "Favourites"]) 
                   :style {:flex 1}} [my-favourites-tab]]
-           [view {:tab-label "Hot"
+           [view {:tab-label (t [:music.tabs/hot "Hot"])
                   :style {:flex 1}} [hot-tab]]
-           [view {:tab-label "Explore"
+           [view {:tab-label (t [:music.tabs/genres "Genres"])
                   :style {:flex 1}} [tags-tab]]
-           [view {:tab-label "My songs"
+           [view {:tab-label (t [:music.tabs/my-songs "Uploaded"])
                   :style {:flex 1}} [user-uploaded-songs-tab]]
-           [view {:tab-label "Artists"
+           [view {:tab-label (t [:music.tabs/artists "Artists"]) 
                   :style {:flex 1}} [all-artists-tab]]]])
        (when (:playing-song-id @player-status)
          [player])
