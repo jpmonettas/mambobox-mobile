@@ -39,7 +39,6 @@
 (reg-fx
  :upload-song
  (fn [{:keys [song-path file-name device-id]}]
-   (println "UPLOADING song" server-url "/song/upload?device-id=" device-id)
    (upload-file (clj->js {:uploadUrl (str server-url "/song/upload?device-id=" device-id)
                           :method "POST"
                           :headers {"Accept" "application/json"}
@@ -71,12 +70,10 @@
 (reg-fx
  :create-sys-notification
  (fn [{:keys [id subject message]}]
-   (println "CREATING NOTIFICATION")
    (.then (.create notification #js {:id id :subject subject :message message :progress -1})
-          (fn [n] (println "NOTIFICATION CREATED")))))
+          (fn [n] ))))
 
 (reg-fx
  :remove-sys-notification
  (fn [id]
-   (println "REMOVING NOTIFICATION")
    (.delete notification id)))

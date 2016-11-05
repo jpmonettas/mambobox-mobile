@@ -8,7 +8,6 @@
             [mambobox-core.core-spec]
             [mambobox-core.generic-utils :as gen-utils]
             [mambobox-mobile.constants :as constants]
-            [devtools.core :as dt]
             [mambobox-mobile.dict :refer [mambo-dictionary]]
             [taoensso.tempura :as tempura :refer [tr]]
             [goog.string :as gstring]
