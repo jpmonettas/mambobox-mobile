@@ -214,20 +214,34 @@
       (assoc-in [:player-status :playing-song-id] song-id)
       (assoc-in [:player-status :paused?] false)
       (assoc-in [:player-status :reported-play] false)
+      (assoc-in [:player-status :ready?] false)
       (assoc-in [:player-status :playing-song-progress] 0)))
 
 (reg-event-db
  :play-song
  [validate-spec-mw debug]
  (fn [db [_ song-id]]
-  (play-song db song-id)))
+   (play-song db song-id)))
+
+(reg-event-db
+ :play-stalled
+ [ debug]
+ (fn [db [_ song-id]]
+   (assoc-in db [:player-status :ready?] false)))
+
+(reg-event-db
+ :play-resume
+ [debug]
+ (fn [db [_ song-id]]
+   (assoc-in db [:player-status :ready?] true)))
 
 (reg-event-db
  :play-song-ready
  [validate-spec-mw debug]
  (fn [db [_ duration]]
    (-> db
-       (assoc-in [:player-status :playing-song-duration] duration))))
+       (assoc-in [:player-status :playing-song-duration] duration)
+       (assoc-in [:player-status :ready?] true))))
 
 (reg-event-db
  :playing-song-finished
@@ -360,7 +374,7 @@
  :re-complete-album-name
  [debug (inject-cofx :device-info)]
  (fn [cofxs [_ q]]
-   {:http-xhrio (assoc (services/search-artists-http-fx (-> cofxs :device-info :uniq-id) q)
+   {:http-xhrio (assoc (services/search-albums-http-fx (-> cofxs :device-info :uniq-id) q)
                        :on-failure [:error]
                        :on-success [:complete-name-results])}))
 

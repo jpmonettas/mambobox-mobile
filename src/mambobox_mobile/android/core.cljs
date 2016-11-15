@@ -33,7 +33,8 @@
 (def touchable-highlight (r/adapt-react-class (.-TouchableHighlight ReactNative)))
 (def touchable-opacity (r/adapt-react-class (.-TouchableOpacity ReactNative)))
 (def video (r/adapt-react-class (.-default (js/require "react-native-video/Video"))))
-(def icon (r/adapt-react-class (.-default (js/require "react-native-vector-icons/FontAwesome"))))
+(def fa-icon (r/adapt-react-class (.-default (js/require "react-native-vector-icons/FontAwesome"))))
+(def mt-icon (r/adapt-react-class (.-default (js/require "react-native-vector-icons/MaterialIcons"))))
 (def scrollable-tab-view (r/adapt-react-class (js/require "react-native-scrollable-tab-view")))
 (def back-android (.-BackAndroid ReactNative))
 (def DialogAndroid (js/require "react-native-dialogs"))
@@ -128,14 +129,14 @@
 (defn favourite-star-icon [fav? song-id]
   (if fav?
        [touchable-opacity {:on-press #(dispatch [:rm-from-favourites song-id])}
-        [icon {:name "star"
+        [fa-icon {:name "star"
                :style {:padding 10
                        :align-self :center
                        :margin 5
                        :color :orange}
                :size 20}]]
        [touchable-opacity {:on-press #(dispatch [:add-to-favourites song-id])}
-        [icon {:name "star-o"
+        [fa-icon {:name "star-o"
                :style {:padding 10
                        :align-self :center
                        :margin 5
@@ -155,11 +156,11 @@
      (if (:score s)
        [view {:style {:padding 10
                        :margin 5}}
-        [icon {:name "thermometer-empty"
+        [fa-icon {:name "thermometer-empty"
                :color :red
                :size 20}]
         [text {:style {:color :red}} (gstring/format "%.1f" (* 10 (:score s)))]]
-       [icon {:name "music"
+       [fa-icon {:name "music"
               :style {:padding 10
                       :margin 5
                       :background-color "rgba(0,0,0,0.1)"}
@@ -213,8 +214,10 @@
    [view {:style {:padding 15
                   :border-width 1
                   :margin 2
-                  :border-color "rgba(0,0,0,0.1)"}}
-    [text {:style {:font-size 15}}
+                  :border-color "rgba(0,0,0,0.1)"
+                  :flex-direction :row}}
+    [mt-icon {:name "group" :size 20}]
+    [text {:style {:font-size 15 :margin-left 10}}
      (gen-utils/denormalize-entity-name-string (:mb.artist/name a))]]])
 
 (defn album [a]
@@ -222,8 +225,10 @@
    [view {:style {:padding 15
                   :border-width 1
                   :margin 2
-                  :border-color "rgba(0,0,0,0.1)"}}
-    [text {:style {:font-size 15}}
+                  :border-color "rgba(0,0,0,0.1)"
+                  :flex-direction :row}}
+    [mt-icon {:name "album" :size 20}]
+    [text {:style {:font-size 15 :margin-left 10}}
      (gen-utils/denormalize-entity-name-string (:mb.album/name a))]]])
 
 (defn all-artists-tab []
@@ -326,7 +331,7 @@
                   :border-color "rgba(0,0,0,0.1)"
                   :flex-direction :row
                   :justify-content :space-between}}
-    [icon {:name "search"
+    [fa-icon {:name "search"
            :style {:padding 10
                    :margin 5}
            :size 20}]
@@ -335,7 +340,7 @@
                     :font-size 17}} (-> s :mb.song/name gen-utils/denormalize-entity-name-string)]
      [text {} (-> s :mb.artist/name gen-utils/denormalize-entity-name-string)]
      [text {} (-> s :mb.album/name gen-utils/denormalize-entity-name-string)]]
-    [icon {:name "headphones"
+    [fa-icon {:name "headphones"
            :style {:padding 10
                    :margin 5}
            :size 20}]]])
@@ -356,7 +361,7 @@
                 :flex-direction :row
                 :flex 1
                 :height 40}
-          [icon {:name "search"
+          [fa-icon {:name "search"
                  :style {:padding 5
                          :flex 0.1
                          :background-color :white}
@@ -369,7 +374,7 @@
                                             (dispatch [:re-search @query-text-atom]))}]
           [touchable-opacity {:on-press #(dispatch [:close-search])
                               :style {:flex 0.1}}
-           [icon {:name "times"
+           [fa-icon {:name "times"
                   :style {:padding 5
                           :background-color :white}
                   :size 20}]]]]
@@ -395,61 +400,67 @@
   [view {:style {:margin 30
                  :flex-direction :row
                  :justify-content :space-between}}
-   [icon {:name "random" :size 12}]
-   [icon {:name "step-backward" :size 25}]
+   [fa-icon {:name "random" :size 12}]
+   [fa-icon {:name "step-backward" :size 25}]
    [touchable-opacity {:on-press #(dispatch [:toggle-play])}
-    [icon {:name (if paused? "play" "pause") :size 50}]]
-   [icon {:name "step-forward" :size 25}]
-   [icon {:name "repeat" :size 12}]])
+    [fa-icon {:name (if paused? "play" "pause") :size 50}]]
+   [fa-icon {:name "step-forward" :size 25}]
+   [fa-icon {:name "repeat" :size 12}]])
 
 (defn song-editor [song]
   (let [card-style {:flex-direction :row
-                    :elevation 3
                     :padding 5
                     :margin-bottom 9
                     :background-color :white
                     :justify-content :space-between
-                    :align-items :center}
-        text-style {:font-size 18}]
+                    :align-items :center}]
     [view {:style {:padding-bottom 10
                    :padding-top 10}}
      [view {:style {:height 100
                     :margin-bottom 30
                     :justify-content :space-between}}
+      ;; Song
       [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) (t [:music.edit/new-song-name "New song name"]) nil :update-song-name])}
        [view {:style card-style}
+        [mt-icon {:name "music-note" :size 22}]
         [view {:flex 1}
-         [text {:style text-style
+         [text {:style {:font-size 18}
                 :number-of-lines 1}
           (gen-utils/denormalize-entity-name-string (:mb.song/name song))]]
-        [icon {:name "pencil" :size 17}]]]
+        [mt-icon {:name "mode-edit" :size 17}]]]
+
+      ;; Artist
       [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) (t [:music.edit/new-artist-name "New artist name"]) :re-complete-artist-name :update-artist-name])}
        [view {:style card-style}
+        [mt-icon {:name "group" :size 20}]
         [view {:flex 1}
-         [text {:style text-style
+         [text {:style {:font-size 15}
                 :number-of-lines 1}
           (-> song :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]
-        [icon {:name "pencil" :size 17}]]]
+        [mt-icon {:name "mode-edit" :size 17}]]]
+
+      ;; Album
       [touchable-opacity {:on-press #(dispatch [:open-edit-song-dialog (:db/id song) (t [:music.edit/new-album-name "New album name"]) :re-complete-album-name :update-album-name])}
        [view {:style card-style}
+        [mt-icon {:name "album" :size 20}]
         [view {:flex 1}
-         [text {:style text-style
+         [text {:style {:font-size 15}
                 :number-of-lines 1}
           (-> song :album :mb.album/name gen-utils/denormalize-entity-name-string)]]
-        [icon {:name "pencil" :size 17}]]]]
+        [mt-icon {:name "mode-edit" :size 17}]]]]
      [view {:style {:flex-direction :row
                     :height 100
                     :justify-content :center
                     :align-items :center}}
       (for [tag (:mb.song/tags song)]
-        [touchable-opacity {:on-long-press #(dispatch [:remove-tag-from-song (:db/id song) tag])}
-         [view {:key tag
-                :style {:margin 5
+        [touchable-opacity {:on-long-press #(dispatch [:remove-tag-from-song (:db/id song) tag])
+                            :key tag}
+         [view {:style {:margin 5
                         :padding 5
                         :background-color (get tags tag)}}
           [text {:style {:color :white}} tag]]])
       [touchable-opacity {:on-press #(show-tag-select-dialog song)}
-       [icon {:name "tags" :size 35}]]]]))
+       [fa-icon {:name "tags" :size 35}]]]]))
 
 (defn expanded-player []
   (let [player-status (subscribe [:player-status])
@@ -474,7 +485,7 @@
            [text {} (format-duration (:playing-song-duration pl-stat))]]
           [full-song-controls paused?]]]))))
 
-(defn collapsed-player [playing-song paused?]
+(defn collapsed-player [playing-song paused? ready?]
   [view {:style {:flex-direction :row
                  :justify-content :space-between
                  :align-items :center}}
@@ -483,7 +494,7 @@
     [touchable-opacity {:on-press #(dispatch [:toggle-player-collapsed])
                         :style {:flex 0.9}}
      [view {:style {:flex-direction :row}}
-      [icon {:name "headphones"
+      [fa-icon {:name (if ready? "headphones" "clock-o")
              :style {:padding 10
                      :margin 5
                      :background-color "rgba(0,0,0,0.1)"} 
@@ -497,7 +508,7 @@
         (-> playing-song :artist :mb.artist/name gen-utils/denormalize-entity-name-string)]]]]
     [view {:style {:margin 10 :flex 0.1 :flex-direction :row}}
      [touchable-opacity {:on-press #(dispatch [:toggle-play])}
-      [icon {:name (if paused? "play" "pause")
+      [fa-icon {:name (if paused? "play" "pause")
              :size 20
              :style {:margin 5}}]]]]])
 
@@ -512,15 +523,18 @@
                        :background-color :white
                        }}
         (if (:collapsed? pl-stat)
-          [collapsed-player pl-song (:paused? pl-stat)]
+          [collapsed-player pl-song (:paused? pl-stat) (:ready? pl-stat)]
           [expanded-player])
         [video {:source {:uri (str constants/server-url (:mb.song/url pl-song))}
                 :play-in-background true
                 :play-when-inactive true
-                :paused (:paused? pl-stat)
+                :paused (or (:paused? pl-stat) (not (:ready? pl-stat)))
                 :on-load #(dispatch [:play-song-ready (.-duration %)])
                 :on-end #(dispatch [:playing-song-finished])
-                :on-progress #(dispatch [:playing-song-progress-report (.-currentTime %)])}]]))))
+                :on-progress #(dispatch [:playing-song-progress-report (.-currentTime %)])
+                :on-playback-stalled #(dispatch [:play-stalled])
+                :on-playback-resume #(dispatch [:play-resume])
+                }]]))))
 
 (defn app-root []
   (let [selected-tab (subscribe [:selected-tab])
