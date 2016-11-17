@@ -1,15 +1,18 @@
 (ns mambobox-mobile.subs
-  (:require [re-frame.core :refer [reg-sub subscribe]]))
+  (:require [re-frame.core :refer [reg-sub subscribe]]
+            [mambobox-mobile.events :refer [find-next-prev-song-id]]))
 
 
 (reg-sub
   :songs
   (fn [db _]
-    (map (fn [s]
-           (if (contains? (into #{} (:favourites-songs-ids db)) (:db/id s))
-             (assoc s :favourite? true)
-             s))
-     (vals (:songs db)))))
+    (->> (:songs db)
+         (map (fn [[sid s]]
+                [sid
+                 (if (contains? (into #{} (:favourites-songs-ids db)) sid)
+                   (assoc s :favourite? true)
+                   s)]))
+         (into {}))))
 
 (reg-sub
   :favourites-songs-ids
@@ -22,16 +25,12 @@
    [(subscribe [:songs])
     (subscribe [:favourites-songs-ids])])
  (fn [[songs f-ids] _]
-   (filter (fn [s]
-             (contains? (into #{} f-ids) (:db/id s)))
-           songs)))
+   (map songs f-ids)))
 
 (reg-sub
  :hot-songs-ids-and-scores
   (fn [db _]
     (:hot-songs-ids-and-scores db)))
-
-(defn search-song [id songs] (first (filter #(= (:db/id %) id) songs)))
 
 (reg-sub
  :hot-songs
@@ -40,7 +39,7 @@
     (subscribe [:hot-songs-ids-and-scores])])
  (fn [[songs h-ids] _]
    (map (fn [[id score]]
-          (-> (search-song id songs)
+          (-> (get songs id)
               (assoc :score score)))
         h-ids)))
 
@@ -55,9 +54,7 @@
    [(subscribe [:songs])
     (subscribe [:user-uploaded-songs-ids])])
  (fn [[songs us-ids] _]
-   (filter (fn [s]
-             (contains? (into #{} us-ids) (:db/id s)))
-           songs)))
+   (map songs us-ids)))
 
 (reg-sub
  :all-artists
@@ -77,7 +74,7 @@
  (fn [[songs selected-artist] _]
    (let [selected-album-songs-ids (-> selected-artist :selected-album :songs-ids)]
      (if (pos? (count selected-album-songs-ids))
-       (map #(search-song % songs) selected-album-songs-ids)
+       (map songs selected-album-songs-ids)
        []))))
 
 (reg-sub
@@ -92,9 +89,7 @@
     (subscribe [:selected-tag])])
  (fn [[songs selected-tag] _]
    (when selected-tag
-     (let [selected-tag-songs (filter (fn [s]
-                                       (contains? (:selected-tag-songs-ids selected-tag) (:db/id s)))
-                                     songs)]
+     (let [selected-tag-songs (map songs (:selected-tag-songs-ids selected-tag))]
       (assoc selected-tag :songs selected-tag-songs)))))
 
 (reg-sub
@@ -113,9 +108,18 @@
    [(subscribe [:songs])
     (subscribe [:playing-song-id])])
  (fn [[songs psi] _]
-   (first (filter (fn [s]
-                    (= psi (:db/id s)))
-                  songs))))
+   (get songs psi)))
+
+(reg-sub
+ :next-song
+ (fn [db _]
+   (find-next-prev-song-id db :next)))
+
+(reg-sub
+ :prev-song
+ (fn [db _]
+   (find-next-prev-song-id db :prev)))
+
 ;;;;;;;;;;;;;
 ;; UI subs ;;
 ;;;;;;;;;;;;;

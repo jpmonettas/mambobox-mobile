@@ -6,6 +6,11 @@
 (s/def :db.player-status/paused? boolean?)
 (s/def :db.player-status/collapsed? boolean?)
 (s/def :db.player-status/playing-song-id :db/id)
+(s/def :db.player-status/playing-song-queue #{:favourites
+                                              :hot
+                                              :uploaded
+                                              :selected-album
+                                              :selected-tag})
 (s/def :db.player-status/playing-song-duration any?)
 (s/def :db.player-status/playing-song-progress any?)
 (s/def :db.player-status/reported-play boolean?)
@@ -13,6 +18,7 @@
                                           :db.player-status/collapsed?]
                                  :opt-un [:db.player-status/playing-song-duration
                                           :db.player-status/playing-song-id
+                                          :db.player-status/playing-song-queue
                                           :db.player-status/playing-song-progress
                                           :db.player-status/reported-play]))
 

@@ -143,8 +143,8 @@
                        :color :black}
                :size 20}]]))
 
-(defn song [s]
-  [touchable-opacity {:on-press #(dispatch [:play-song (:db/id s)])}
+(defn song-item [source s]
+  [touchable-opacity {:on-press #(dispatch [:play-song (:db/id s) source])}
    [view {:style {:padding 10
                   :margin 2
                   :border-width 1
@@ -189,7 +189,7 @@
   (let [favourites-songs (subscribe [:favourites-songs])]
    (fn []
      [list-view {:dataSource (build-list-view-datasource (apply array @favourites-songs))
-                 :renderRow (comp r/as-element song)
+                 :renderRow (comp r/as-element (partial song-item :favourites))
                  ;; Takes out a warning, will be deprecated soon
                  :enableEmptySections true}])))
 
@@ -197,7 +197,7 @@
   (let [hot-songs (subscribe [:hot-songs])]
    (fn []
      [list-view {:dataSource (build-list-view-datasource (apply array @hot-songs))
-                 :renderRow (comp r/as-element song)
+                 :renderRow (comp r/as-element (partial song-item :hot))
                  ;; Takes out a warning, will be deprecated soon
                  :enableEmptySections true}])))
 
@@ -205,7 +205,7 @@
   (let [user-uploaded-songs (subscribe [:user-uploaded-songs])]
    (fn []
      [list-view {:dataSource (build-list-view-datasource (apply array @user-uploaded-songs))
-                 :renderRow (comp r/as-element song)
+                 :renderRow (comp r/as-element (partial song-item :uploaded))
                  ;; Takes out a warning, will be deprecated soon
                  :enableEmptySections true}])))
 
@@ -249,7 +249,7 @@
                             :align-self :center}}
               (gen-utils/denormalize-entity-name-string (-> s-artist :selected-album :mb.album/name ))]
              [list-view {:dataSource (build-list-view-datasource (apply array @selected-album-songs))
-                         :renderRow (comp r/as-element song)
+                         :renderRow (comp r/as-element (partial song-item :selected-album))
                          ;; Takes out a warning, will be deprecated soon
                          :enableEmptySections true}]]
             
@@ -312,7 +312,7 @@
            (:tag st)]]
          (if (pos? (count (:songs st)))
           [list-view {:dataSource (build-list-view-datasource (apply array (:songs st)))
-                      :renderRow (comp r/as-element song)
+                      :renderRow (comp r/as-element (partial song-item :selected-tag))
                       ;; Takes out a warning, will be deprecated soon
                       :enableEmptySections true}]
           [text (str (t [:music/no-songs-under  "No songs underr "]) (:tag st))])]
@@ -397,15 +397,29 @@
                                      2 (dispatch [:open-search]))}]])
 
 (defn full-song-controls [paused?]
-  [view {:style {:margin 30
-                 :flex-direction :row
-                 :justify-content :space-between}}
-   [fa-icon {:name "random" :size 12}]
-   [fa-icon {:name "step-backward" :size 25}]
-   [touchable-opacity {:on-press #(dispatch [:toggle-play])}
-    [fa-icon {:name (if paused? "play" "pause") :size 50}]]
-   [fa-icon {:name "step-forward" :size 25}]
-   [fa-icon {:name "repeat" :size 12}]])
+  (let [prev-song (subscribe [:prev-song])
+        next-song (subscribe [:next-song])]
+    (fn []
+     [view {:style {:margin 30
+                    :flex-direction :row
+                    :justify-content :space-between}}
+      [fa-icon {:name "random" :size 12}]
+    
+      (if @prev-song
+        [touchable-opacity {:on-press #(dispatch [:play-prev-song])}
+         [fa-icon {:name "step-backward" :size 25}]]
+        [fa-icon {:name "step-backward" :size 25 :color "#dddddd"}])
+    
+      [touchable-opacity {:on-press #(dispatch [:toggle-play])}
+       [fa-icon {:name (if paused? "play" "pause") :size 50}]]
+
+      (if @next-song
+        [touchable-opacity {:on-press #(dispatch [:play-next-song])}
+         [fa-icon {:name "step-forward" :size 25}]]
+        [fa-icon {:name "step-forward" :size 25 :color "#dddddd"}]
+        )
+    
+      [fa-icon {:name "repeat" :size 12}]])))
 
 (defn song-editor [song]
   (let [card-style {:flex-direction :row

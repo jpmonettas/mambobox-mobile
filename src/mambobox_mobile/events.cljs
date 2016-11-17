@@ -209,19 +209,53 @@
  (fn [db [_ value]]
    (update-in db [:player-status :collapsed?] not)))
 
-(defn play-song [db song-id]
-  (-> db
-      (assoc-in [:player-status :playing-song-id] song-id)
-      (assoc-in [:player-status :paused?] false)
-      (assoc-in [:player-status :reported-play] false)
-      (assoc-in [:player-status :ready?] false)
-      (assoc-in [:player-status :playing-song-progress] 0)))
+(defn get-songs-ids-queue [db]
+  (when-let [playing-queue (-> db :player-status :playing-song-queue)]
+   (case playing-queue
+     :favourites (-> db :favourites-songs-ids)
+     :hot (->> db
+               :hot-songs-ids-and-scores
+               (map first))
+     :uploaded (-> db :user-uploaded-songs-ids)
+     :selected-album (-> db :selected-artist :selected-album :songs-ids)
+     :selected-tag (-> db :selected-tag :selected-tag-songs-ids))))
+
+(defn find-next-prev-song-id [db next-or-prev]
+  (when-let [songs-ids-queue (get-songs-ids-queue db)]
+    (.log js/console "Queue currently is " (->> songs-ids-queue
+                                                (map (:songs db))
+                                                (map :mb.song/name)))
+    (let [playing-song-id (-> db :player-status :playing-song-id)]
+      (->> (if (= next-or-prev :next) songs-ids-queue (reverse songs-ids-queue))
+           (drop-while #(not= % playing-song-id))
+           rest
+           first))))
+
+(reg-event-fx
+ :play-next-song
+ [debug]
+ (fn [cofxs _]
+   (when-let [next-song-id (find-next-prev-song-id (:db cofxs) :next)]
+     {:dispatch [:play-song next-song-id  (-> (:db cofxs) :player-status :playing-song-queue)]})))
+
+(reg-event-fx
+ :play-prev-song
+ [debug]
+ (fn [cofxs _]
+   (when-let [next-song-id (find-next-prev-song-id (:db cofxs) :prev)]
+    {:dispatch [:play-song next-song-id  (-> (:db cofxs) :player-status :playing-song-queue)]})))
 
 (reg-event-db
  :play-song
  [validate-spec-mw debug]
- (fn [db [_ song-id]]
-   (play-song db song-id)))
+ (fn [db [_ song-id song-source]]
+   (-> db
+      (assoc-in [:player-status :playing-song-id] song-id)
+      (assoc-in [:player-status :playing-song-queue] song-source)
+      (assoc-in [:player-status :paused?] false)
+      (assoc-in [:player-status :reported-play] false)
+      (assoc-in [:player-status :ready?] false)
+      (assoc-in [:player-status :playing-song-progress] 0))))
 
 (reg-event-db
  :play-stalled
@@ -243,14 +277,15 @@
        (assoc-in [:player-status :playing-song-duration] duration)
        (assoc-in [:player-status :ready?] true))))
 
-(reg-event-db
+(reg-event-fx
  :playing-song-finished
  [validate-spec-mw debug]
- (fn [db [_ _]]
-   (-> db
-       (assoc-in [:player-status :paused?] true)
-       (assoc-in [:player-status :reported-play] false)
-       (assoc-in [:player-status :playing-song-progress] 0))))
+ (fn [cofxs [_ _]]
+   {:db (-> (:db cofxs)
+            (assoc-in [:player-status :paused?] true)
+            (assoc-in [:player-status :reported-play] false)
+            (assoc-in [:player-status :playing-song-progress] 0))
+    :dispatch [:play-next-song]}))
 
 (reg-event-fx
  :playing-song-progress-report
@@ -498,7 +533,7 @@
  :rm-from-favourites  
  [validate-spec-mw debug (inject-cofx :device-info)]
  (fn [cofxs [_ song-id]]
-   {:db (update (:db cofxs) :favourites-songs-ids disj song-id)
+   {:db (update (:db cofxs) :favourites-songs-ids (fn [f-songs-ids] (remove #(= % song-id) f-songs-ids)))
     :http-xhrio (assoc (services/unset-song-as-favourite-http-fx (-> cofxs :device-info :uniq-id) song-id)
                        :on-failure [:error])}))
 
@@ -542,11 +577,10 @@
                        :on-failure [:error]
                        :on-success [:song-for-play])}))
 
-(reg-event-db
+(reg-event-fx
  :song-for-play
- (fn [db [_ song]]
-   (-> db
-       (update :songs assoc (:db/id song) song)
-       (play-song (:db/id song)))))
+ (fn [cofxs [_ song]]
+   {:db (update (:db cofxs) :songs assoc (:db/id song) song)
+    :dispatch [:play-song (:db/id song) nil]}))
 
 
